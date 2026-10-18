@@ -26,11 +26,19 @@ export function DetailCard({ schedule }: DetailCardProps) {
         </span>
       </div>
       <dl className="mt-3 space-y-1 text-sm text-gray-700">
-        <div className="flex gap-2">
-          <dt className="w-16 shrink-0 text-gray-500">주소</dt>
-          <dd>{schedule.address ?? detail?.address ?? "정보 없음"}</dd>
-        </div>
-        {/* 조사한 정보가 있는 장소(예: 숙소)는 해당 없는 항목을 숨기고, 아직 조사 전인 가게만 "준비 중"으로 보여준다 */}
+        {/* 조사한 정보가 있는 장소(예: 숙소, 버스)는 해당 없는 항목을 숨기고, 아직 조사 전인 가게만 "준비 중"으로 보여준다 */}
+        {!detail || schedule.address || detail.address ? (
+          <div className="flex gap-2">
+            <dt className="w-16 shrink-0 text-gray-500">주소</dt>
+            <dd>{schedule.address ?? detail?.address ?? "정보 없음"}</dd>
+          </div>
+        ) : null}
+        {detail?.info?.map((item) => (
+          <div key={item.label} className="flex gap-2">
+            <dt className="w-16 shrink-0 text-gray-500">{item.label}</dt>
+            <dd>{item.value}</dd>
+          </div>
+        ))}
         {!detail || detail.openingHours ? (
           <div className="flex gap-2">
             <dt className="w-16 shrink-0 text-gray-500">영업시간</dt>
@@ -56,6 +64,22 @@ export function DetailCard({ schedule }: DetailCardProps) {
           </div>
         ) : null}
       </dl>
+
+      {detail?.links?.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {detail.links.map((link) => (
+            <a
+              key={link.url}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      ) : null}
 
       {detail?.menu?.length ? (
         <div className="mt-4 border-t border-gray-100 pt-3">

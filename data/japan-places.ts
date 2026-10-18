@@ -153,21 +153,18 @@ const JUSTMEAT_PHOTOS: PlacePhoto[] = [
  * 예시 사진임을 캡션에 밝힌다. 하카타 호텔·에어비앤비는 사용자가 준 숙소 사진을 쓴다.
  */
 const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
-  "인천 → 후쿠오카 출발": PHOTOS.incheon,
-  "인천 → 후쿠오카 도착": PHOTOS.fukuokaAirport,
+  "인천 → 후쿠오카 이동": [PHOTOS.incheon, PHOTOS.fukuokaAirport],
   "신신라멘 텐진 본점": PHOTOS.shinshinTenjin,
   "Iseya Foods Club 마트 방문": PHOTOS.iseyaFoodsClub,
   "나카스 포장마차 거리": PHOTOS.nakasuYatai,
   "텐진 포장마차 거리": PHOTOS.tenjinYatai,
   "버스터미널로 출발": PHOTOS.hakataBusTerminal,
-  "하카타 → 구로카와 출발": PHOTOS.hakataBusTerminal,
-  "하카타 → 구로카와 도착": PHOTOS.kurokawa,
+  "하카타 → 구로카와 이동": [PHOTOS.hakataBusTerminal, PHOTOS.kurokawa],
   "온천마을 산책, 카페, 족욕": PHOTOS.kurokawa,
   "료칸 체크인": { ...PHOTOS.kurokawa, caption: "구로카와 온천 마을 (료칸 사진 아님)" },
   "노천탕 + 가이세키 석식": [PHOTOS.kurokawaRotenburo, PHOTOS.ryokanKaiseki],
   "조식 + 노천탕": [PHOTOS.ryokanBreakfast, PHOTOS.kurokawaRotenburo],
-  "구로카와 → 하카타 출발": PHOTOS.kurokawa,
-  "구로카와 → 하카타 도착": PHOTOS.hakataBusTerminal,
+  "구로카와 → 하카타 이동": [PHOTOS.kurokawa, PHOTOS.hakataBusTerminal],
   "에어비앤비 체크인": AIRBNB_PHOTO,
   "이비자 클럽": IBIZA_PHOTO,
   "하카타 호텔 체크인": HAKATA_HOTEL_PHOTOS,
@@ -175,8 +172,7 @@ const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   // 10/26(월) 자유시간에는 저스트미트에 간다
   자유시간: JUSTMEAT_PHOTOS,
   "후쿠오카 국제공항 도착": PHOTOS.fukuokaAirport,
-  "후쿠오카 → 인천 출발": PHOTOS.fukuokaAirport,
-  "후쿠오카 → 인천 도착": PHOTOS.incheon,
+  "후쿠오카 → 인천 이동": [PHOTOS.fukuokaAirport, PHOTOS.incheon],
 };
 
 /**
@@ -200,6 +196,43 @@ const PLACE_DETAILS: Record<string, PlaceDetail> = {
       { label: "타베로그 리뷰", url: "https://tabelog.com/en/fukuoka/A4001/A400103/40045709/dtlrvwlst/" },
       { label: "포트래블", url: "https://4travel.jp/dm_shisetsu/11680970" },
     ],
+  },
+  // 고속버스 예매 정보: 사용자가 준 하이웨이버스(highwaybus.com) 모바일 승차권 페이지 내용 (2026-10-18 확인).
+  // 예약자 이름은 넣지 않았다. 승차권 링크는 사용자 요청으로 버튼에 연결했다 (링크를 아는 사람은 누구나 QR을 열 수 있다).
+  "하카타 → 구로카와 이동": {
+    name: "고속버스 후쿠오카 ~ 구로카와온천선 (가는 편)",
+    info: [
+      { label: "승차일", value: "10/25(일)" },
+      { label: "편명", value: "51202편 1호차" },
+      { label: "출발", value: "하카타 버스터미널(博多バスＴ) 09:53" },
+      { label: "도착", value: "구로카와 온천(黒川温泉) 12:29" },
+      { label: "좌석", value: "02A, 02B, 02C (성인 3명)" },
+      { label: "운임", value: "¥12,000" },
+    ],
+    links: [{ label: "🎫 가는 편 승차권 (QR) 열기", url: "https://www.highwaybus.com/gp/payment/payWebTicketFromMail?b3aa0438c3c5334f91eab4ebd952530e&ticket_type=mobile#1" }],
+    highlights: [
+      "타는 곳은 하카타역 바로 앞 하카타 버스터미널(博多バスターミナル)이다. 터미널 안 승차장 번호는 현장 안내판에서 확인한다.",
+      "승차할 때 위 '승차권 열기' 버튼으로 모바일 승차권(QR코드)을 열어 기사에게 보여준다.",
+      "자리가 지정석(02A~02C)이라 정해진 좌석에 앉는다.",
+    ],
+    sources: [{ label: "하이웨이버스 모바일 승차권", url: "https://www.highwaybus.com/" }],
+  },
+  "구로카와 → 하카타 이동": {
+    name: "고속버스 구로카와온천 ~ 후쿠오카선 (오는 편)",
+    info: [
+      { label: "승차일", value: "10/26(월)" },
+      { label: "편명", value: "51203편 1호차 (텐진 고속버스터미널행)" },
+      { label: "출발", value: "구로카와 온천(黒川温泉) 11:00" },
+      { label: "하차", value: "하카타 버스터미널(博多バスＴ)" },
+      { label: "좌석", value: "01A, 01B, 01C (성인 3명)" },
+      { label: "운임", value: "¥12,000" },
+    ],
+    links: [{ label: "🎫 오는 편 승차권 (QR) 열기", url: "https://www.highwaybus.com/gp/payment/payWebTicketFromMail?b3aa0438c3c5334f91eab4ebd952530e&ticket_type=mobile#2" }],
+    highlights: [
+      "버스 종점은 텐진 고속버스터미널이지만, 예매는 하카타 버스터미널 하차로 되어 있다. 내릴 곳을 놓치지 않게 주의한다.",
+      "위 '승차권 열기' 버튼으로 '帰り(돌아오는 편)' 승차권 QR코드를 열어 보여준다.",
+    ],
+    sources: [{ label: "하이웨이버스 모바일 승차권", url: "https://www.highwaybus.com/" }],
   },
   // 영업시간·전화번호는 사용자가 알려준 값
   "이비자 클럽": {

@@ -14,7 +14,7 @@ const CATEGORY_KEYWORDS: Array<{ category: ScheduleCategory; keywords: string[] 
   },
   {
     category: "transport",
-    keywords: ["출발", "도착", "버스", "택시", "고속버스"],
+    keywords: ["출발", "도착", "이동", "버스", "택시", "고속버스"],
   },
   {
     category: "lodging",

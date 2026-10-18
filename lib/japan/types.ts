@@ -43,6 +43,10 @@ export interface PlaceDetail {
   /** 시트에 주소가 없을 때 보여줄 주소 */
   address?: string;
   openingHours?: string;
+  /** 예매 정보처럼 항목: 값으로 보여줄 추가 정보 (주소·영업시간 아래에 표시) */
+  info?: Array<{ label: string; value: string }>;
+  /** 정보 아래에 버튼으로 보여줄 링크 (예: 모바일 승차권) */
+  links?: Array<{ label: string; url: string }>;
   /** 메뉴와 가격. price는 출처에 적힌 그대로의 문자열 */
   menu?: Array<{ name: string; price: string; note?: string }>;
   phone?: string;

@@ -41,7 +41,7 @@ export async function fetchJapanSchedules(): Promise<Schedule[]> {
     skipEmptyLines: true,
   });
 
-  return data
+  const schedules = data
     .filter((row) => emptyToNull(row["일정"]) !== null)
     .map((row, index) => {
       const title = row["일정"].trim();
@@ -59,6 +59,54 @@ export async function fetchJapanSchedules(): Promise<Schedule[]> {
         coordinates: null,
       } satisfies Schedule;
     });
+
+  return mergeDepartureArrivalPairs(schedules);
+}
+
+/** 두 값 중 비어있지 않은 것을 쓰고, 둘 다 있으면서 다르면 " / "로 잇는다. */
+function joinDistinct(a: string | null, b: string | null): string | null {
+  if (a && b && a !== b) {
+    return `${a} / ${b}`;
+  }
+  return a ?? b;
+}
+
+/**
+ * 시트에 "인천 → 후쿠오카 출발" 다음 행이 "인천 → 후쿠오카 도착"처럼 같은 구간의 출발·도착이
+ * 연달아 있으면 "인천 → 후쿠오카 이동" 하나로 합친다. 시간은 "출발 ~ 도착"으로 표시한다.
+ * 시트 원본은 그대로 두고 화면에서만 합친다.
+ */
+function mergeDepartureArrivalPairs(schedules: Schedule[]): Schedule[] {
+  const merged: Schedule[] = [];
+
+  for (let i = 0; i < schedules.length; i += 1) {
+    const current = schedules[i];
+    const next = schedules[i + 1];
+    const route = current.title.match(/^(.+→.+?)\s*출발$/)?.[1];
+
+    if (route && next && next.date === current.date && next.title === `${route} 도착`) {
+      const title = `${route} 이동`;
+      const note = joinDistinct(current.note, next.note);
+      const time =
+        current.time && next.time ? `${current.time} ~ ${next.time}` : (current.time ?? next.time);
+
+      merged.push({
+        ...current,
+        title,
+        time,
+        note,
+        address: current.address ?? next.address,
+        preparation: joinDistinct(current.preparation, next.preparation),
+        category: categorizeSchedule(title, note),
+      });
+      i += 1;
+      continue;
+    }
+
+    merged.push(current);
+  }
+
+  return merged;
 }
 
 /** 날짜별로 그룹핑한다. 시트에 나온 순서를 그대로 유지한다. */

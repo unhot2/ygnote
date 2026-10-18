@@ -1,8 +1,9 @@
 import type { PlaceDetail, PlacePhoto } from "@/lib/japan/types";
 
 /**
- * 장소 사진. 저작권 문제가 없도록 Wikimedia Commons의 자유 라이선스 사진만 쓴다 (2026-10 수집).
- * 가게 단위(신신라멘, Iseya 마트, 클럽, 에어비앤비)는 공개 라이선스 사진이 없어 넣지 않았다.
+ * 장소 사진. 기본은 Wikimedia Commons의 자유 라이선스 사진이다 (2026-10 수집).
+ * 신신라멘·Iseya 마트는 사용자가 직접 고른 구글 지도 사용자 사진을 public/photos에 넣어 쓴다.
+ * 클럽, 에어비앤비는 공개 라이선스 사진이 없어 넣지 않았다.
  * 이런 곳은 지도 패널의 "구글 지도에서 열기"에서 사진을 볼 수 있다.
  */
 const PHOTOS = {
@@ -77,6 +78,23 @@ const PHOTOS = {
     license: "CC BY-SA 4.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Miyako_Hotel_Hakata_20190914_02.jpg",
   },
+  // 사용자가 구글 지도에서 직접 골라 준 사진들 (지도 화면 요소는 잘라냄)
+  shinshinTenjin: {
+    src: "/photos/shinshin-tenjin.jpg",
+    caption: "하카타 라멘 ShinShin 텐진 본점",
+    author: "yongtack kong",
+    license: "구글 지도 사용자 사진",
+    sourceUrl: "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E3%82%89%E3%83%BC%E3%82%81%E3%82%93%20ShinShin%20%E5%A4%A9%E7%A5%9E%E6%9C%AC%E5%BA%97",
+    sourceName: "Google 지도",
+  },
+  iseyaFoodsClub: {
+    src: "/photos/iseya-foods-club.jpg",
+    caption: "いせや FOODS CLUB (Iseya 푸드클럽)",
+    author: "ts",
+    license: "구글 지도 사용자 사진",
+    sourceUrl: "https://www.google.com/maps/search/?api=1&query=%E3%81%84%E3%81%9B%E3%82%84%E3%83%95%E3%83%BC%E3%82%BA%E3%82%AF%E3%83%A9%E3%83%96%20%E6%98%A5%E5%90%89",
+    sourceName: "Google 지도",
+  },
   hakataStation: {
     src: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Hakata_Station_20180306.jpg/960px-Hakata_Station_20180306.jpg",
     caption: "하카타역",
@@ -93,6 +111,8 @@ const PHOTOS = {
 const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "인천 → 후쿠오카 출발": PHOTOS.incheon,
   "인천 → 후쿠오카 도착": PHOTOS.fukuokaAirport,
+  "신신라멘 텐진 본점": PHOTOS.shinshinTenjin,
+  "Iseya Foods Club 마트 방문": PHOTOS.iseyaFoodsClub,
   "나카스 포장마차 거리": PHOTOS.nakasuYatai,
   "텐진 포장마차 거리": PHOTOS.tenjinYatai,
   "버스터미널로 출발": PHOTOS.hakataBusTerminal,

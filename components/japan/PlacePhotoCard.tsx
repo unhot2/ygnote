@@ -8,7 +8,7 @@ export interface PlacePhotoCardProps {
 export function PlacePhotoCard({ photo }: PlacePhotoCardProps) {
   return (
     <figure className="overflow-hidden rounded-lg border border-gray-200">
-      {/* 외부(Wikimedia) 이미지라 next/image 최적화 설정 없이 그대로 쓴다 */}
+      {/* 외부(Wikimedia) 이미지가 섞여 있어 next/image 최적화 설정 없이 그대로 쓴다 */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         key={photo.src}
@@ -25,7 +25,7 @@ export function PlacePhotoCard({ photo }: PlacePhotoCardProps) {
           rel="noopener noreferrer"
           className="text-xs text-gray-400 hover:text-gray-600 hover:underline"
         >
-          사진: {photo.author} / {photo.license} (Wikimedia Commons)
+          사진: {photo.author} / {photo.license} ({photo.sourceName ?? "Wikimedia Commons"})
         </a>
       </figcaption>
     </figure>

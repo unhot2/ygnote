@@ -45,13 +45,15 @@ export interface PlaceDetail {
   sources?: Array<{ label: string; url: string }>;
 }
 
-/** 자유 라이선스 장소 사진. 라이선스 조건상 작가·라이선스·출처를 함께 표시해야 한다. */
+/** 장소 사진. 작가·라이선스·출처를 함께 표시한다. */
 export interface PlacePhoto {
   src: string;
   caption: string;
   author: string;
   license: string;
   sourceUrl: string;
+  /** 출처 이름. 없으면 Wikimedia Commons */
+  sourceName?: string;
 }
 
 /** 상세정보 카드를 보여줄지 여부를 결정하는 카테고리(디자인 문서 3장 상태 D) */

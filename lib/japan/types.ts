@@ -38,7 +38,13 @@ export interface CategoryPhraseSet {
 
 /** 상세정보 카드 표시 항목. 영업시간/전화번호는 시트에 없는 데이터라 옵셔널. */
 export interface PlaceDetail {
+  /** 일정명과 실제 가게 이름이 다를 때 보여줄 가게 이름 (예: "자유시간" → 저스트미트) */
+  name?: string;
+  /** 시트에 주소가 없을 때 보여줄 주소 */
+  address?: string;
   openingHours?: string;
+  /** 메뉴와 가격. price는 출처에 적힌 그대로의 문자열 */
+  menu?: Array<{ name: string; price: string; note?: string }>;
   phone?: string;
   /** 가격대·할인 등 조사해서 확인된 정보 */
   highlights?: string[];

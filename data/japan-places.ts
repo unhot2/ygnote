@@ -104,6 +104,21 @@ const PHOTOS = {
   },
 } satisfies Record<string, PlacePhoto>;
 
+// 저스트미트 사진은 운영사(BAKURO 그룹) 공식 사이트의 매장 소개 사진이다.
+const JUSTMEAT_SOURCE = {
+  author: "BAKURO",
+  license: "공식 사이트 사진",
+  sourceUrl: "https://www.bakuro09.com/shop/justmeat/",
+  sourceName: "BAKURO 공식 사이트",
+};
+
+const JUSTMEAT_PHOTOS: PlacePhoto[] = [
+  { src: "/photos/justmeat-counter.jpg", caption: "저스트미트 매장 카운터", ...JUSTMEAT_SOURCE },
+  { src: "/photos/justmeat-karaiyatsu.jpg", caption: "카라이야츠 (매운 양념 소창)", ...JUSTMEAT_SOURCE },
+  { src: "/photos/justmeat-garlic-rice.jpg", caption: "갈릭 호르몬 라이스", ...JUSTMEAT_SOURCE },
+  { src: "/photos/justmeat-motsuni.jpg", caption: "모츠니코미 (곱창 조림)", ...JUSTMEAT_SOURCE },
+];
+
 /**
  * 일정(시트 "일정" 텍스트) → 사진(여러 장 가능). 숙소는 실제 묵는 곳 사진이 없어
  * 예시 사진임을 캡션에 밝힌다.
@@ -125,6 +140,8 @@ const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "구로카와 → 하카타 출발": PHOTOS.kurokawa,
   "구로카와 → 하카타 도착": PHOTOS.hakataBusTerminal,
   "하카타 호텔 체크인": PHOTOS.hakataHotel,
+  // 10/26(월) 자유시간에는 저스트미트에 간다
+  자유시간: JUSTMEAT_PHOTOS,
   "호텔 출발": { ...PHOTOS.hakataStation, caption: "하카타역 일대 (호텔 사진 아님)" },
   "후쿠오카 국제공항 도착": PHOTOS.fukuokaAirport,
   "후쿠오카 → 인천 출발": PHOTOS.fukuokaAirport,
@@ -151,6 +168,39 @@ const PLACE_DETAILS: Record<string, PlaceDetail> = {
       { label: "야후 지도 리뷰", url: "https://map.yahoo.co.jp/v3/place/Z9g-yOZi2q2/review" },
       { label: "타베로그 리뷰", url: "https://tabelog.com/en/fukuoka/A4001/A400103/40045709/dtlrvwlst/" },
       { label: "포트래블", url: "https://4travel.jp/dm_shisetsu/11680970" },
+    ],
+  },
+  // 사용자가 참고한 네이버 블로그는 도구에서 열리지 않아, 공식 사이트·예약 페이지·리뷰로 교차 확인했다 (2026-10-18).
+  // 메뉴 가격은 공식 가격표가 공개돼 있지 않아 리뷰·소개글에 나온 가격을 시점과 함께 적었다.
+  자유시간: {
+    name: "저스트미트 다이묘점 (ジャストミート 大名店)",
+    address: "福岡市中央区大名1-14-5 有光ビル1F B号室 (후쿠오카시 주오구 다이묘)",
+    openingHours: "17:00~25:00 (L.O. 24:00)",
+    phone: "092-791-3429",
+    menu: [
+      { name: "白盛り合わせ (시로 모둠, 호르몬 모둠)", price: "3,580엔", note: "가게 대표 메뉴" },
+      { name: "赤白盛り (아카시로 모둠, 살코기+호르몬)", price: "2,980엔 (세금 별도)", note: "2020~2021년 리뷰 가격" },
+      { name: "レバー (간)", price: "580엔", note: "2021년 리뷰 가격" },
+      { name: "もつ煮込み (모츠니코미)", price: "380엔 (세금 별도)", note: "2020~2021년 리뷰 가격" },
+      { name: "カライヤツ (카라이야츠, 매운 양념 소창)", price: "가격 미확인", note: "공식 추천 메뉴" },
+      { name: "ガーリックホルモンライス (갈릭 호르몬 라이스)", price: "가격 미확인", note: "공식 추천 메뉴, 마무리용" },
+      { name: "お通し (오토시, 양배추)", price: "-", note: "리필 무료 (2024년 후기)" },
+    ],
+    highlights: [
+      "10/26(월)에도 영업한다. 공식 사이트에는 아직 '월요일 휴무'로 적혀 있지만, 예약 페이지(TableCheck)에서 10/26 17:00~23:00 예약 시간대가 열려 있는 것을 확인했다 (2026-10-18 조회).",
+      "좌석이 16석(카운터 8, 테이블 8)뿐이라 예약을 추천한다. 예약은 TableCheck에서 하고, 10분 넘게 늦으면 취소될 수 있다.",
+      "예산은 1인 약 6,000~7,000엔(예약 사이트 기준)이다. 2024년 후기에서는 2명이 술 포함 약 13,000엔이 나왔다.",
+      "목장 직영 'BAKURO' 그룹의 호르몬(곱창) 야키니쿠 전문점이다. 소를 통째로 사들여 질 좋은 부위를 싸게 낸다고 한다.",
+      "굽는 법(가게 추천): 두꺼운 하라미·우설은 천천히, 쓰라미(볼살)는 양면을 살짝만 굽는다.",
+      "가게 안이 덥고 연기가 많으니 냄새가 배도 괜찮은 옷을 입는다. 카드 결제가 가능하다.",
+      "가는 길: 지하철 나나쿠마선 텐진미나미역에서 도보 약 10분. 니시테츠 후쿠오카(텐진)역에서도 걸어갈 수 있다.",
+    ],
+    sources: [
+      { label: "BAKURO 공식 사이트", url: "https://www.bakuro09.com/shop/justmeat/" },
+      { label: "TableCheck 예약", url: "https://www.tablecheck.com/ja/justmeat" },
+      { label: "후쿠오카 관광 가이드", url: "https://www.tourist-guide.net/fukuoka/archives/7914" },
+      { label: "Retty 리뷰", url: "https://retty.me/area/PRE40/ARE122/SUB12301/100001408315/" },
+      { label: "방문 후기(2024)", url: "https://shonokunblog.com/justmeat-daimyo_tenjin" },
     ],
   },
 };

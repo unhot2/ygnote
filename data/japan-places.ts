@@ -3,7 +3,6 @@ import type { PlaceDetail, PlacePhoto } from "@/lib/japan/types";
 /**
  * 장소 사진. 기본은 Wikimedia Commons의 자유 라이선스 사진이다 (2026-10 수집).
  * 신신라멘·Iseya 마트는 사용자가 직접 고른 구글 지도 사용자 사진을 public/photos에 넣어 쓴다.
- * 클럽, 에어비앤비는 공개 라이선스 사진이 없어 넣지 않았다.
  * 이런 곳은 지도 패널의 "구글 지도에서 열기"에서 사진을 볼 수 있다.
  */
 const PHOTOS = {
@@ -123,6 +122,17 @@ const AIRBNB_PHOTO: PlacePhoto = {
   sourceName: "Google 지도",
 };
 
+// 이비자 클럽 사진은 사용자가 구글 지도에서 골라 준 것이다 (지도 화면 요소는 잘라냄).
+const IBIZA_PHOTO: PlacePhoto = {
+  src: "/photos/ibiza-club.jpg",
+  caption: "이비자 클럽 입구 (THE SHOPS 다이묘 건물, 'Ibiza' 깃발이 있는 곳)",
+  author: "구글 지도 사용자",
+  license: "구글 지도 사용자 사진",
+  sourceUrl: "https://www.google.com/maps/search/?api=1&query=Ibiza%20Fukuoka%20THE%20SHOPS%20Daimyo",
+  sourceName: "Google 지도",
+  fit: "contain",
+};
+
 // 저스트미트 사진은 운영사(BAKURO 그룹) 공식 사이트의 매장 소개 사진이다.
 const JUSTMEAT_SOURCE = {
   author: "BAKURO",
@@ -159,6 +169,7 @@ const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "구로카와 → 하카타 출발": PHOTOS.kurokawa,
   "구로카와 → 하카타 도착": PHOTOS.hakataBusTerminal,
   "에어비앤비 체크인": AIRBNB_PHOTO,
+  "이비자 클럽": IBIZA_PHOTO,
   "하카타 호텔 체크인": HAKATA_HOTEL_PHOTOS,
   "호텔 출발": HAKATA_HOTEL_EXTERIOR,
   // 10/26(월) 자유시간에는 저스트미트에 간다
@@ -189,6 +200,11 @@ const PLACE_DETAILS: Record<string, PlaceDetail> = {
       { label: "타베로그 리뷰", url: "https://tabelog.com/en/fukuoka/A4001/A400103/40045709/dtlrvwlst/" },
       { label: "포트래블", url: "https://4travel.jp/dm_shisetsu/11680970" },
     ],
+  },
+  // 영업시간·전화번호는 사용자가 알려준 값
+  "이비자 클럽": {
+    openingHours: "오후 9:00 ~ 오전 5:00",
+    phone: "+81 92-791-8866",
   },
   "하카타 호텔 체크인": {
     name: "그랜드 호텔 & 레지던스 하카타 프리미어 (Grand Residence Hotel Hakata Premier)",

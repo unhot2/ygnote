@@ -49,36 +49,6 @@ export function getMapLocation(schedule: Schedule): MapLocation | null {
   return FALLBACK_LOCATIONS[schedule.title] ?? null;
 }
 
-export interface StreetViewSpot {
-  lat: number;
-  lng: number;
-  /** 카메라가 바라보는 방향(도). 0 = 북쪽 */
-  heading: number;
-}
-
-/**
- * 로드뷰(스트리트뷰)를 보여줄 일정. 키는 시트의 "일정" 텍스트.
- * 좌표는 국토지리원(GSI) 주소 검색 API로 주소를 변환한 값이다.
- */
-const STREET_VIEW_SPOTS: Record<string, StreetViewSpot> = {
-  // 春吉三丁目13-31 イル・レガーロ天神
-  "에어비앤비 체크인": { lat: 33.589664, lng: 130.406631, heading: 0 },
-};
-
-export function getStreetViewSpot(title: string): StreetViewSpot | null {
-  return STREET_VIEW_SPOTS[title] ?? null;
-}
-
-/** API 키 없이 쓸 수 있는 스트리트뷰 임베드 URL (iframe 안에서만 열린다) */
-export function getStreetViewEmbedUrl({ lat, lng, heading }: StreetViewSpot): string {
-  return `https://www.google.com/maps?layer=c&cbll=${lat},${lng}&cbp=12,${heading},0,0,0&output=svembed`;
-}
-
-/** 구글 지도 앱/웹에서 스트리트뷰로 여는 URL (Maps URLs, API 키 불필요) */
-export function getStreetViewOpenUrl({ lat, lng, heading }: StreetViewSpot): string {
-  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}&heading=${heading}`;
-}
-
 /** API 키 없이 쓸 수 있는 구글 지도 임베드 URL */
 export function getMapEmbedUrl(query: string): string {
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&hl=ko&z=15&output=embed`;

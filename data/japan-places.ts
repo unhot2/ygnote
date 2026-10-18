@@ -113,6 +113,16 @@ const HAKATA_HOTEL_PHOTOS: PlacePhoto[] = [
   { src: "/photos/hakata-premier-kitchen.jpg", caption: "주방 (전자레인지·냉장고)", ...HAKATA_HOTEL_SOURCE },
 ];
 
+// 에어비앤비 건물 사진은 사용자가 구글 스트리트뷰에서 캡처해 준 것이다.
+const AIRBNB_PHOTO: PlacePhoto = {
+  src: "/photos/airbnb-tenjin.jpg",
+  caption: "에어비앤비 건물 (간판: セントラルコート天神)",
+  author: "Google",
+  license: "구글 스트리트뷰 캡처",
+  sourceUrl: "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8C%BA%E6%98%A5%E5%90%893-13-31",
+  sourceName: "Google 지도",
+};
+
 // 저스트미트 사진은 운영사(BAKURO 그룹) 공식 사이트의 매장 소개 사진이다.
 const JUSTMEAT_SOURCE = {
   author: "BAKURO",
@@ -130,7 +140,7 @@ const JUSTMEAT_PHOTOS: PlacePhoto[] = [
 
 /**
  * 일정(시트 "일정" 텍스트) → 사진(여러 장 가능). 숙소는 실제 묵는 곳 사진이 없어
- * 예시 사진임을 캡션에 밝힌다. 하카타 호텔은 사용자가 준 숙소 사진과 로드뷰(lib/japan/map.ts)를 함께 보여준다.
+ * 예시 사진임을 캡션에 밝힌다. 하카타 호텔·에어비앤비는 사용자가 준 숙소 사진을 쓴다.
  */
 const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "인천 → 후쿠오카 출발": PHOTOS.incheon,
@@ -148,6 +158,7 @@ const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "조식 + 노천탕": [PHOTOS.ryokanBreakfast, PHOTOS.kurokawaRotenburo],
   "구로카와 → 하카타 출발": PHOTOS.kurokawa,
   "구로카와 → 하카타 도착": PHOTOS.hakataBusTerminal,
+  "에어비앤비 체크인": AIRBNB_PHOTO,
   "하카타 호텔 체크인": HAKATA_HOTEL_PHOTOS,
   "호텔 출발": HAKATA_HOTEL_EXTERIOR,
   // 10/26(월) 자유시간에는 저스트미트에 간다

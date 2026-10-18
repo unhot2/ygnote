@@ -8,11 +8,9 @@ import { PhraseCard } from "@/components/japan/PhraseCard";
 import { PhraseTab } from "@/components/japan/PhraseTab";
 import { PlacePhotoCard } from "@/components/japan/PlacePhotoCard";
 import { ScheduleList } from "@/components/japan/ScheduleList";
-import { StreetViewPanel } from "@/components/japan/StreetViewPanel";
 import { TipListTab } from "@/components/japan/TipListTab";
 import { getPlaceDetail, getSchedulePhotos } from "@/data/japan-places";
 import { JAPAN_CAUTIONS, JAPAN_PACKING_LIST } from "@/data/japan-tips";
-import { getStreetViewSpot } from "@/lib/japan/map";
 import { DETAIL_CARD_CATEGORIES, type Schedule } from "@/lib/japan/types";
 
 export interface JapanPageClientProps {
@@ -51,7 +49,6 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
   );
 
   const selectedPhotos = selectedSchedule ? getSchedulePhotos(selectedSchedule.title) : [];
-  const selectedStreetView = selectedSchedule ? getStreetViewSpot(selectedSchedule.title) : null;
 
   // 상세정보 카드는 마트·식당 일정, 또는 따로 조사한 가게 정보가 있는 일정(예: 자유시간의 저스트미트)에 보여준다.
   const showDetailCard =
@@ -91,9 +88,6 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
               </div>
             ) : null}
             <MapPanel selectedSchedule={selectedSchedule} />
-            {selectedStreetView && selectedSchedule ? (
-              <StreetViewPanel spot={selectedStreetView} title={selectedSchedule.title} />
-            ) : null}
             {selectedPhotos.length > 0 ? (
               <div className={`grid gap-4 ${selectedPhotos.length > 1 ? "sm:grid-cols-2" : ""}`}>
                 {selectedPhotos.map((photo) => (

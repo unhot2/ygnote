@@ -68,6 +68,8 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
           <section
             className={`w-full overflow-y-auto md:block md:w-[35%] md:border-r ${selectedSchedule ? "hidden" : ""}`}
           >
+            {/* 모바일은 지도·상세가 목록에 가려져 있어, 눌러야 보인다는 안내를 붙인다 */}
+            <p className="px-5 pt-3 text-xs text-gray-400 md:hidden">※ 클릭 시 상세정보 확인</p>
             <ScheduleList schedules={schedules} selectedId={selectedId} onSelect={selectSchedule} />
           </section>
 

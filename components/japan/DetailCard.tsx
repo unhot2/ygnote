@@ -1,3 +1,4 @@
+import { getPlaceDetail } from "@/data/japan-places";
 import type { Schedule, ScheduleCategory } from "@/lib/japan/types";
 
 export interface DetailCardProps {
@@ -14,6 +15,8 @@ const CATEGORY_LABELS: Record<ScheduleCategory, string> = {
 };
 
 export function DetailCard({ schedule }: DetailCardProps) {
+  const detail = getPlaceDetail(schedule.title);
+
   return (
     <div className="rounded-lg border border-gray-200 p-4">
       <div className="flex items-start justify-between gap-2">
@@ -29,11 +32,11 @@ export function DetailCard({ schedule }: DetailCardProps) {
         </div>
         <div className="flex gap-2">
           <dt className="w-16 shrink-0 text-gray-500">영업시간</dt>
-          <dd>정보 준비 중</dd>
+          <dd>{detail?.openingHours ?? "정보 준비 중"}</dd>
         </div>
         <div className="flex gap-2">
           <dt className="w-16 shrink-0 text-gray-500">전화번호</dt>
-          <dd>정보 준비 중</dd>
+          <dd>{detail?.phone ?? "정보 준비 중"}</dd>
         </div>
         {schedule.note ? (
           <div className="flex gap-2">
@@ -48,6 +51,30 @@ export function DetailCard({ schedule }: DetailCardProps) {
           </div>
         ) : null}
       </dl>
+
+      {detail?.highlights?.length ? (
+        <div className="mt-4 border-t border-gray-100 pt-3">
+          <h4 className="text-sm font-semibold text-gray-900">알아두면 좋은 정보</h4>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700">
+            {detail.highlights.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          {detail.sources?.length ? (
+            <p className="mt-2 text-xs text-gray-400">
+              출처:{" "}
+              {detail.sources.map((source, index) => (
+                <span key={source.url}>
+                  {index > 0 ? ", " : null}
+                  <a href={source.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    {source.label}
+                  </a>
+                </span>
+              ))}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

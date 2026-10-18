@@ -6,8 +6,10 @@ import { JapanTabs, type JapanTabId } from "@/components/japan/JapanTabs";
 import { MapPanel } from "@/components/japan/MapPanel";
 import { PhraseCard } from "@/components/japan/PhraseCard";
 import { PhraseTab } from "@/components/japan/PhraseTab";
+import { PlacePhotoCard } from "@/components/japan/PlacePhotoCard";
 import { ScheduleList } from "@/components/japan/ScheduleList";
 import { TipListTab } from "@/components/japan/TipListTab";
+import { getSchedulePhotos } from "@/data/japan-places";
 import { JAPAN_CAUTIONS, JAPAN_PACKING_LIST } from "@/data/japan-tips";
 import { DETAIL_CARD_CATEGORIES, type Schedule } from "@/lib/japan/types";
 
@@ -28,6 +30,8 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
     [schedules, selectedId],
   );
 
+  const selectedPhotos = selectedSchedule ? getSchedulePhotos(selectedSchedule.title) : [];
+
   const showDetailCard =
     selectedSchedule !== null && DETAIL_CARD_CATEGORIES.includes(selectedSchedule.category);
 
@@ -43,6 +47,13 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
 
           <section className="flex w-full flex-col gap-4 overflow-y-auto p-4 md:w-[65%]">
             <MapPanel selectedSchedule={selectedSchedule} />
+            {selectedPhotos.length > 0 ? (
+              <div className={`grid gap-4 ${selectedPhotos.length > 1 ? "sm:grid-cols-2" : ""}`}>
+                {selectedPhotos.map((photo) => (
+                  <PlacePhotoCard key={photo.src} photo={photo} />
+                ))}
+              </div>
+            ) : null}
             {showDetailCard && selectedSchedule ? <DetailCard schedule={selectedSchedule} /> : null}
             <PhraseCard category={selectedSchedule?.category ?? null} />
           </section>

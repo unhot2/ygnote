@@ -35,7 +35,7 @@ export function MapPanel({ selectedSchedule }: MapPanelProps) {
 
   return (
     <div className="w-full">
-      <div className="mb-2 flex items-start justify-between gap-3">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0">
           <p className="font-medium text-gray-900">{selectedSchedule.title}</p>
           <p className="text-sm text-gray-600">
@@ -49,7 +49,7 @@ export function MapPanel({ selectedSchedule }: MapPanelProps) {
           href={getMapOpenUrl(location.query)}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+          className="shrink-0 self-start rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
         >
           구글 지도에서 열기 (사진·리뷰)
         </a>

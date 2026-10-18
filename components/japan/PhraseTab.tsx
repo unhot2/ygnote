@@ -48,7 +48,7 @@ export function PhraseTab() {
               {activeSet.wordGroups.map((group) => (
                 <div key={group.title}>
                   <h4 className="text-sm font-semibold text-gray-500">{group.title}</h4>
-                  <PhraseGrid phrases={group.words} />
+                  <PhraseGrid phrases={group.words} alwaysTwoColumns />
                 </div>
               ))}
             </div>
@@ -59,9 +59,10 @@ export function PhraseTab() {
   );
 }
 
-function PhraseGrid({ phrases }: { phrases: JapanesePhrase[] }) {
+/** 문장 표현은 휴대폰 폭에서 2열이면 줄바꿈이 심해 1열로, 짧은 기초 단어는 항상 2열로 보여준다 */
+function PhraseGrid({ phrases, alwaysTwoColumns = false }: { phrases: JapanesePhrase[]; alwaysTwoColumns?: boolean }) {
   return (
-    <ul className="mt-2 grid grid-cols-2 gap-2 text-sm">
+    <ul className={`mt-2 grid gap-2 text-sm ${alwaysTwoColumns ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
       {phrases.map((phrase) => (
         <li key={phrase.ko} className="flex flex-col rounded-md border border-gray-200 px-3 py-2">
           <span className="text-gray-900">{phrase.ko}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { DetailCard } from "@/components/japan/DetailCard";
 import { JapanTabs, type JapanTabId } from "@/components/japan/JapanTabs";
 import { MapPanel } from "@/components/japan/MapPanel";
@@ -26,6 +26,24 @@ export interface JapanPageClientProps {
 export function JapanPageClient({ schedules }: JapanPageClientProps) {
   const [activeTab, setActiveTab] = useState<JapanTabId>("schedule");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 모바일에서 상세 화면에 들어가기 전 목록 스크롤 위치. "일정 목록"으로 돌아갈 때 복원한다.
+  const listScrollY = useRef(0);
+
+  const isMobile = () => window.matchMedia("(max-width: 767px)").matches;
+
+  const selectSchedule = (id: string) => {
+    if (isMobile()) {
+      listScrollY.current = window.scrollY;
+      window.scrollTo({ top: 0 });
+    }
+    setSelectedId(id);
+  };
+
+  const backToList = () => {
+    setSelectedId(null);
+    // 목록이 다시 그려진 뒤에 스크롤해야 원래 위치로 돌아간다
+    requestAnimationFrame(() => window.scrollTo({ top: listScrollY.current }));
+  };
 
   const selectedSchedule = useMemo(
     () => schedules.find((schedule) => schedule.id === selectedId) ?? null,
@@ -46,11 +64,30 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
 
       {activeTab === "schedule" ? (
         <div className="flex flex-1 flex-col md:flex-row">
-          <section className="w-full overflow-y-auto border-b md:w-[35%] md:border-b-0 md:border-r">
-            <ScheduleList schedules={schedules} selectedId={selectedId} onSelect={setSelectedId} />
+          {/* 모바일은 목록/상세를 한 번에 하나만 보여주고, md 이상은 좌우로 나란히 보여준다 */}
+          <section
+            className={`w-full overflow-y-auto md:block md:w-[35%] md:border-r ${selectedSchedule ? "hidden" : ""}`}
+          >
+            <ScheduleList schedules={schedules} selectedId={selectedId} onSelect={selectSchedule} />
           </section>
 
-          <section className="flex w-full flex-col gap-4 overflow-y-auto p-4 md:w-[65%]">
+          <section
+            className={`w-full flex-col gap-4 overflow-y-auto p-4 md:flex md:w-[65%] ${selectedSchedule ? "flex" : "hidden"}`}
+          >
+            {selectedSchedule ? (
+              <div className="flex items-center gap-2 md:hidden">
+                <button
+                  type="button"
+                  onClick={backToList}
+                  className="shrink-0 rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 active:bg-gray-100"
+                >
+                  ← 일정 목록
+                </button>
+                <span className="truncate text-sm text-gray-500">
+                  {selectedSchedule.date} {selectedSchedule.time ?? ""}
+                </span>
+              </div>
+            ) : null}
             <MapPanel selectedSchedule={selectedSchedule} />
             {selectedStreetView && selectedSchedule ? (
               <StreetViewPanel spot={selectedStreetView} title={selectedSchedule.title} />

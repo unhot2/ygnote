@@ -7,6 +7,7 @@ export interface DetailCardProps {
 const CATEGORY_LABELS: Record<ScheduleCategory, string> = {
   mart: "마트",
   food: "식당/주점",
+  airport: "공항",
   transport: "교통/이동",
   lodging: "숙박",
   free: "자유시간",

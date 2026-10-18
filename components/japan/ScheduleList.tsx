@@ -10,6 +10,7 @@ export interface ScheduleListProps {
 }
 
 const CATEGORY_ICON: Record<ScheduleCategory, string> = {
+  airport: "✈️",
   transport: "🚌",
   food: "🍜",
   mart: "🛒",
@@ -18,6 +19,7 @@ const CATEGORY_ICON: Record<ScheduleCategory, string> = {
 };
 
 const CATEGORY_LABEL: Record<ScheduleCategory, string> = {
+  airport: "공항",
   transport: "교통/이동",
   food: "식당/주점",
   mart: "마트",

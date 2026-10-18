@@ -5,11 +5,16 @@ import type { ScheduleCategory } from "./types";
  * 규칙 출처: docs/japan-page-design-draft.md 1.3장
  */
 // 순서가 중요하다: "호텔 출발"처럼 여러 카테고리 키워드가 섞인 일정은 먼저 걸린 쪽으로 분류된다.
+// "인천 → 후쿠오카 출발"처럼 항공편 일정은 "출발/도착"이 들어가므로 airport를 transport보다 먼저 검사하고,
 // "온천마을 산책, 카페, 족욕"이 식당으로 빠지지 않도록 free를 food보다 먼저 검사한다.
 const CATEGORY_KEYWORDS: Array<{ category: ScheduleCategory; keywords: string[] }> = [
   {
+    category: "airport",
+    keywords: ["공항", "항공", "비행", "인천"],
+  },
+  {
     category: "transport",
-    keywords: ["출발", "도착", "버스", "공항", "비행", "택시", "고속버스"],
+    keywords: ["출발", "도착", "버스", "택시", "고속버스"],
   },
   {
     category: "lodging",

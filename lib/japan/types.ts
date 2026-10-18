@@ -1,4 +1,5 @@
 export type ScheduleCategory =
+  | "airport"
   | "transport"
   | "food"
   | "mart"

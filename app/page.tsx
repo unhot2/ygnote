@@ -8,9 +8,8 @@ export default function Home() {
         href="/japan"
         className="flex h-14 items-center justify-center gap-2 rounded-full bg-zinc-900 px-8 text-lg font-medium text-white transition-colors hover:bg-zinc-700"
       >
-        <span aria-hidden>🇯🇵</span>
-        일본여행
-        <span aria-hidden>✈️</span>
+        고레와스폰사데스
+        <span aria-hidden>♨️</span>
       </Link>
     </main>
   );

@@ -30,14 +30,19 @@ export function DetailCard({ schedule }: DetailCardProps) {
           <dt className="w-16 shrink-0 text-gray-500">주소</dt>
           <dd>{schedule.address ?? detail?.address ?? "정보 없음"}</dd>
         </div>
-        <div className="flex gap-2">
-          <dt className="w-16 shrink-0 text-gray-500">영업시간</dt>
-          <dd>{detail?.openingHours ?? "정보 준비 중"}</dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="w-16 shrink-0 text-gray-500">전화번호</dt>
-          <dd>{detail?.phone ?? "정보 준비 중"}</dd>
-        </div>
+        {/* 조사한 정보가 있는 장소(예: 숙소)는 해당 없는 항목을 숨기고, 아직 조사 전인 가게만 "준비 중"으로 보여준다 */}
+        {!detail || detail.openingHours ? (
+          <div className="flex gap-2">
+            <dt className="w-16 shrink-0 text-gray-500">영업시간</dt>
+            <dd>{detail?.openingHours ?? "정보 준비 중"}</dd>
+          </div>
+        ) : null}
+        {!detail || detail.phone ? (
+          <div className="flex gap-2">
+            <dt className="w-16 shrink-0 text-gray-500">전화번호</dt>
+            <dd>{detail?.phone ?? "정보 준비 중"}</dd>
+          </div>
+        ) : null}
         {schedule.note ? (
           <div className="flex gap-2">
             <dt className="w-16 shrink-0 text-gray-500">비고</dt>

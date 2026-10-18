@@ -60,6 +60,8 @@ export interface PlacePhoto {
   sourceUrl: string;
   /** 출처 이름. 없으면 Wikimedia Commons */
   sourceName?: string;
+  /** 세로 사진처럼 잘리면 안 되는 사진은 "contain"으로 전체를 보여준다. 기본은 칸에 맞춰 자름 */
+  fit?: "cover" | "contain";
 }
 
 /** 상세정보 카드를 보여줄지 여부를 결정하는 카테고리(디자인 문서 3장 상태 D) */

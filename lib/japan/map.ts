@@ -11,7 +11,7 @@ export interface MapLocation {
 
 /**
  * 시트에 주소가 없는 일정의 지도 검색어. 키는 시트의 "일정" 텍스트 그대로다.
- * 숙소(료칸 야마노유, 하카타 호텔)는 정확한 위치를 확인할 수 없어 지역 단위로만 잡았다.
+ * 료칸 야마노유는 정확한 위치를 확인할 수 없어 지역 단위로만 잡았다.
  * 시트 "주소" 컬럼에 값이 들어오면 이 매핑보다 시트 주소가 우선한다.
  */
 const FALLBACK_LOCATIONS: Record<string, MapLocation> = {
@@ -27,13 +27,14 @@ const FALLBACK_LOCATIONS: Record<string, MapLocation> = {
   "조식 + 노천탕": { query: "黒川温泉", label: "구로카와 온천 일대 (료칸 주소 미입력)", approximate: true },
   "구로카와 → 하카타 출발": { query: "黒川温泉 バス停", label: "구로카와 온천 버스정류장", approximate: false },
   "구로카와 → 하카타 도착": { query: "博多バスターミナル", label: "하카타 버스터미널", approximate: false },
-  "하카타 호텔 체크인": { query: "博多駅", label: "하카타역 일대 (호텔 주소 미입력)", approximate: true },
+  // 주소(美野島3-13-12)로 검색하면 핀이 건물에서 조금 벗어나서, 구글 지도에 등록된 숙소 이름으로 검색한다.
+  "하카타 호텔 체크인": { query: "Grand Residence Hotel Hakata Premier", label: "그랜드 호텔 & 레지던스 하카타 프리미어 (3-13-12, Minoshima)", approximate: false },
   자유시간: {
     query: "ジャストミート 大名店 福岡市中央区大名1-14-5",
     label: "저스트미트 다이묘점 (福岡市中央区大名1-14-5)",
     approximate: false,
   },
-  "호텔 출발": { query: "博多駅", label: "하카타역 일대 (호텔 주소 미입력)", approximate: true },
+  "호텔 출발": { query: "Grand Residence Hotel Hakata Premier", label: "그랜드 호텔 & 레지던스 하카타 프리미어 (3-13-12, Minoshima)", approximate: false },
   "후쿠오카 국제공항 도착": { query: "福岡空港 国際線ターミナル", label: "후쿠오카 공항 국제선 터미널", approximate: false },
   "후쿠오카 → 인천 출발": { query: "福岡空港 国際線ターミナル", label: "후쿠오카 공항 국제선 터미널", approximate: false },
   "후쿠오카 → 인천 도착": { query: "인천국제공항", label: "인천국제공항", approximate: false },

@@ -71,13 +71,6 @@ const PHOTOS = {
     license: "CC BY 2.0",
     sourceUrl: "https://commons.wikimedia.org/wiki/File:Ikaho_dinner_01.jpg",
   },
-  hakataHotel: {
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Miyako_Hotel_Hakata_20190914_02.jpg/960px-Miyako_Hotel_Hakata_20190914_02.jpg",
-    caption: "하카타역 앞 호텔 예시 (미야코 호텔 하카타, 실제 숙소 아닐 수 있음)",
-    author: "STA3816",
-    license: "CC BY-SA 4.0",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Miyako_Hotel_Hakata_20190914_02.jpg",
-  },
   // 사용자가 구글 지도에서 직접 골라 준 사진들 (지도 화면 요소는 잘라냄)
   shinshinTenjin: {
     src: "/photos/shinshin-tenjin.jpg",
@@ -95,14 +88,30 @@ const PHOTOS = {
     sourceUrl: "https://www.google.com/maps/search/?api=1&query=%E3%81%84%E3%81%9B%E3%82%84%E3%83%95%E3%83%BC%E3%82%BA%E3%82%AF%E3%83%A9%E3%83%96%20%E6%98%A5%E5%90%89",
     sourceName: "Google 지도",
   },
-  hakataStation: {
-    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Hakata_Station_20180306.jpg/960px-Hakata_Station_20180306.jpg",
-    caption: "하카타역",
-    author: "そらみみ",
-    license: "CC BY-SA 4.0",
-    sourceUrl: "https://commons.wikimedia.org/wiki/File:Hakata_Station_20180306.jpg",
-  },
 } satisfies Record<string, PlacePhoto>;
+
+// 하카타 호텔 사진은 사용자가 보내 준 숙소 예약 페이지 사진 모음에서 잘라낸 것이다.
+const HAKATA_HOTEL_SOURCE = {
+  author: "숙소 제공",
+  license: "숙소 예약 페이지 사진",
+  sourceUrl: "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8C%BA%E7%BE%8E%E9%87%8E%E5%B3%B63-13-12",
+  sourceName: "숙소 예약 페이지",
+};
+
+const HAKATA_HOTEL_EXTERIOR: PlacePhoto = {
+  src: "/photos/hakata-premier-exterior.jpg",
+  caption: "그랜드 호텔 & 레지던스 하카타 프리미어 외관",
+  fit: "contain",
+  ...HAKATA_HOTEL_SOURCE,
+};
+
+const HAKATA_HOTEL_PHOTOS: PlacePhoto[] = [
+  HAKATA_HOTEL_EXTERIOR,
+  { src: "/photos/hakata-premier-room.jpg", caption: "객실 (더블 + 소파)", ...HAKATA_HOTEL_SOURCE },
+  { src: "/photos/hakata-premier-twin.jpg", caption: "객실 (트윈)", ...HAKATA_HOTEL_SOURCE },
+  { src: "/photos/hakata-premier-living.jpg", caption: "거실 공간", ...HAKATA_HOTEL_SOURCE },
+  { src: "/photos/hakata-premier-kitchen.jpg", caption: "주방 (전자레인지·냉장고)", ...HAKATA_HOTEL_SOURCE },
+];
 
 // 저스트미트 사진은 운영사(BAKURO 그룹) 공식 사이트의 매장 소개 사진이다.
 const JUSTMEAT_SOURCE = {
@@ -121,7 +130,7 @@ const JUSTMEAT_PHOTOS: PlacePhoto[] = [
 
 /**
  * 일정(시트 "일정" 텍스트) → 사진(여러 장 가능). 숙소는 실제 묵는 곳 사진이 없어
- * 예시 사진임을 캡션에 밝힌다.
+ * 예시 사진임을 캡션에 밝힌다. 하카타 호텔은 사용자가 준 숙소 사진과 로드뷰(lib/japan/map.ts)를 함께 보여준다.
  */
 const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "인천 → 후쿠오카 출발": PHOTOS.incheon,
@@ -139,10 +148,10 @@ const SCHEDULE_PHOTOS: Record<string, PlacePhoto | PlacePhoto[]> = {
   "조식 + 노천탕": [PHOTOS.ryokanBreakfast, PHOTOS.kurokawaRotenburo],
   "구로카와 → 하카타 출발": PHOTOS.kurokawa,
   "구로카와 → 하카타 도착": PHOTOS.hakataBusTerminal,
-  "하카타 호텔 체크인": PHOTOS.hakataHotel,
+  "하카타 호텔 체크인": HAKATA_HOTEL_PHOTOS,
+  "호텔 출발": HAKATA_HOTEL_EXTERIOR,
   // 10/26(월) 자유시간에는 저스트미트에 간다
   자유시간: JUSTMEAT_PHOTOS,
-  "호텔 출발": { ...PHOTOS.hakataStation, caption: "하카타역 일대 (호텔 사진 아님)" },
   "후쿠오카 국제공항 도착": PHOTOS.fukuokaAirport,
   "후쿠오카 → 인천 출발": PHOTOS.fukuokaAirport,
   "후쿠오카 → 인천 도착": PHOTOS.incheon,
@@ -169,6 +178,17 @@ const PLACE_DETAILS: Record<string, PlaceDetail> = {
       { label: "타베로그 리뷰", url: "https://tabelog.com/en/fukuoka/A4001/A400103/40045709/dtlrvwlst/" },
       { label: "포트래블", url: "https://4travel.jp/dm_shisetsu/11680970" },
     ],
+  },
+  "하카타 호텔 체크인": {
+    name: "그랜드 호텔 & 레지던스 하카타 프리미어 (Grand Residence Hotel Hakata Premier)",
+    address: "3-13-12, Minoshima, 하카타 구, 812-0017 후쿠오카시, 후쿠오카 현, 일본 (福岡市博多区美野島3-13-12)",
+    highlights: [
+      "체크인 15:00, 체크아웃 11:00 (예약 사이트 기준)",
+      "객실에 주방(전자레인지·냉장고)과 세탁기가 있는 레지던스형 숙소다. Iseya 마트 등에서 산 음식을 데워 먹을 수 있다.",
+      "하카타역 지하철역·하카타 버스터미널에서 도보 약 23~26분이라 짐이 많으면 택시가 편하다 (구글 지도 기준).",
+      "이름이 비슷한 'The Grand Residence Hotel Hakata'(히가시히에 4-4-12)는 다른 곳이니 택시 탈 때 주소로 안내한다.",
+    ],
+    sources: [{ label: "로손 투어 숙소 정보", url: "https://tour.l-tike.com/hotels/domestic/hotel/91345966/" }],
   },
   // 사용자가 참고한 네이버 블로그는 도구에서 열리지 않아, 공식 사이트·예약 페이지·리뷰로 교차 확인했다 (2026-10-18).
   // 메뉴 가격은 공식 가격표가 공개돼 있지 않아 리뷰·소개글에 나온 가격을 시점과 함께 적었다.

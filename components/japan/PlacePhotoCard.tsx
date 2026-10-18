@@ -15,7 +15,7 @@ export function PlacePhotoCard({ photo }: PlacePhotoCardProps) {
         src={photo.src}
         alt={photo.caption}
         loading="lazy"
-        className="aspect-video w-full bg-gray-100 object-cover"
+        className={`aspect-video w-full bg-gray-100 ${photo.fit === "contain" ? "object-contain" : "object-cover"}`}
       />
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-3 py-2">
         <span className="text-sm text-gray-800">{photo.caption}</span>

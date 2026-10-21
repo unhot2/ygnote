@@ -9,6 +9,7 @@ import { PhraseTab } from "@/components/japan/PhraseTab";
 import { PlacePhotoCard } from "@/components/japan/PlacePhotoCard";
 import { ScheduleList } from "@/components/japan/ScheduleList";
 import { TipListTab } from "@/components/japan/TipListTab";
+import { TyphoonTab } from "@/components/japan/TyphoonTab";
 import { getPlaceDetail, getSchedulePhotos } from "@/data/japan-places";
 import { JAPAN_CAUTIONS, JAPAN_PACKING_LIST } from "@/data/japan-tips";
 import { DETAIL_CARD_CATEGORIES, type Schedule } from "@/lib/japan/types";
@@ -104,6 +105,7 @@ export function JapanPageClient({ schedules }: JapanPageClientProps) {
       {activeTab === "phrases" ? <PhraseTab /> : null}
       {activeTab === "cautions" ? <TipListTab sections={JAPAN_CAUTIONS} /> : null}
       {activeTab === "packing" ? <TipListTab sections={JAPAN_PACKING_LIST} checkable /> : null}
+      {activeTab === "typhoon" ? <TyphoonTab /> : null}
     </>
   );
 }

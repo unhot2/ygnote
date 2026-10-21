@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FukuokaForecast } from "./FukuokaForecast";
 
 // 사용자가 준 earth.nullschool.net 주소(PC 기준). 넓은 화면에서 일본·한반도 남쪽 바다를 중심으로 보여준다.
 const EARTH_URL = "https://earth.nullschool.net/ko/#current/wind/surface/level/orthographic=-235.68,18.22,1992";
@@ -36,6 +37,7 @@ export function TyphoonTab() {
         loading="lazy"
       />
       <p className="text-xs text-gray-400">출처: earth.nullschool.net</p>
+      <FukuokaForecast />
     </div>
   );
 }

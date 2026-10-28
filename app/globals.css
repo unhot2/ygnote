@@ -22,3 +22,48 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
 }
+
+/*
+ * /division 전용 인게임풍 다크 테마 (남색 바탕 + 주황 포인트).
+ * 컴포넌트는 밝은 테마 클래스(bg-gray-50, text-gray-900 등)를 그대로 쓰고,
+ * 이 범위 안에서만 회색·연한 색조 변수를 어두운 값으로 바꿔 끼운다.
+ * 진짜 어두운 면(패널·로고 타일)은 바꾸지 않는 slate 색을 직접 쓴다.
+ */
+.division-theme {
+  color-scheme: dark;
+  --color-gray-50: #172238;
+  --color-gray-100: #1e2a42;
+  --color-gray-200: #2a3650;
+  --color-gray-300: #3d4a66;
+  --color-gray-400: #7f8ba3;
+  --color-gray-500: #97a2b8;
+  --color-gray-600: #b0b9ca;
+  --color-gray-700: #c9d0dc;
+  --color-gray-800: #dde2ea;
+  --color-gray-900: #f1f4f9;
+  --color-orange-50: #2a1b10;
+  --color-orange-100: #3a2410;
+  --color-orange-600: #ff8a3d;
+  --color-orange-700: #ffa766;
+  --color-amber-50: #2a2311;
+  --color-amber-100: #3a2e12;
+  --color-amber-200: #5c4718;
+  --color-amber-600: #f5b301;
+  --color-amber-700: #ffcf5c;
+  --color-amber-800: #ffe08f;
+  --color-violet-100: #2a2148;
+  --color-violet-700: #c4b5fd;
+  --color-emerald-50: #10291f;
+  --color-emerald-800: #7ee2b8;
+  background: #0b1220;
+  color: var(--color-gray-900);
+}
+
+/* 테두리 기본색(currentColor)이 밝은 글자색을 따라가지 않도록 회색 테두리로 맞춘다 */
+@layer base {
+  .division-theme *,
+  .division-theme ::before,
+  .division-theme ::after {
+    border-color: var(--color-gray-200);
+  }
+}

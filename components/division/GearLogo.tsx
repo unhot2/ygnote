@@ -31,7 +31,7 @@ export function GearLogo({
   return (
     <span
       className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${
-        source === "set" ? "bg-gray-950" : "bg-gray-800"
+        source === "set" ? "bg-black" : "bg-[#0b111d]"
       } ${named ? "ring-2 ring-amber-400" : ""} ${className}`}
     >
       {path && !failed ? (

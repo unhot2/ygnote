@@ -18,11 +18,13 @@ import {
 } from "@/data/division-gear";
 import { NAMED_ITEMS, type NamedItem } from "@/data/division-named";
 import {
-  WEAPONS,
+  findWeapon,
   WEAPON_ATTRIBUTES,
   WEAPON_CLASSES,
+  WEAPON_ITEMS,
   WEAPON_MODS,
   WEAPON_TALENTS,
+  WEAPON_TYPE_CORE,
   type WeaponClassId,
 } from "@/data/division-weapons";
 
@@ -93,7 +95,7 @@ export function emptyGearPiece(source: GearPiece["source"], id: string): GearPie
 }
 
 export function weaponBuildFrom(weaponId: string): WeaponBuild {
-  const weapon = WEAPONS.find((w) => w.id === weaponId) ?? WEAPONS[0];
+  const weapon = findWeapon(weaponId) ?? WEAPON_ITEMS[0];
   return {
     weaponId: weapon.id,
     cls: weapon.cls,
@@ -126,6 +128,8 @@ export interface ActiveBonus {
   detail: string;
   /** 조건부 효과라 토글에 따라 꺼질 수 있는지 */
   conditional?: boolean;
+  /** 브랜드·기어세트 세트 효과인지 (결과의 "세트 효과"에는 이것만 보여준다) */
+  set?: boolean;
 }
 
 export interface StatSource {
@@ -133,8 +137,23 @@ export interface StatSource {
   value: number;
 }
 
+/** 장착한 브랜드·기어세트 하나의 진행도와 켜진 효과 */
+export interface SetProgress {
+  id: string;
+  name: string;
+  kind: "brand" | "set";
+  count: number;
+  /** 효과가 모두 켜지는 피스 수 (브랜드 3, 기어세트 4) */
+  max: number;
+  bonuses: ActiveBonus[];
+}
+
 export interface BuildResult {
   cores: Record<CoreId, number>;
+  /** 세트 효과 진행도 (기어세트 먼저, 많이 낀 순) */
+  sets: SetProgress[];
+  /** 장비 부가 속성·개조의 공격/방어/스킬 개수 */
+  attrs: Record<CoreId, number>;
   stats: Record<StatKey, number>;
   /** 스탯별로 어디서 왔는지 (단계별 펼쳐 보기용) */
   sources: Partial<Record<StatKey, StatSource[]>>;
@@ -189,6 +208,8 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
   const amps: AmpEffect[] = [];
   const active: ActiveBonus[] = [];
   const cores: Record<CoreId, number> = { red: 0, blue: 0, yellow: 0 };
+  const sets: SetProgress[] = [];
+  const attrs: Record<CoreId, number> = { red: 0, blue: 0, yellow: 0 };
   const { conditional } = build.conditions;
 
   const add = (stat: StatKey, value: number, label: string) => {
@@ -211,11 +232,16 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
     add(core.stat, core.value, `${slot.label} 코어`);
     piece.minors.slice(0, minorSlotCount(piece.source, piece.id)).forEach((minorId) => {
       const minor = MINOR_ATTRIBUTES.find((m) => m.id === minorId);
-      if (minor) add(minor.effect.stat, minor.effect.value, `${slot.label} 속성`);
+      if (!minor) return;
+      add(minor.effect.stat, minor.effect.value, `${slot.label} 속성`);
+      attrs[minor.kind] += 1;
     });
     if (slot.hasMod && piece.mod) {
       const mod = MINOR_ATTRIBUTES.find((m) => m.id === piece.mod);
-      if (mod) add(mod.effect.stat, mod.effect.value, `${slot.label} 모드`);
+      if (mod) {
+        add(mod.effect.stat, mod.effect.value, `${slot.label} 모드`);
+        attrs[mod.kind] += 1;
+      }
     }
 
     if (piece.source === "named") {
@@ -237,33 +263,41 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
   for (const [brandId, count] of brandCount) {
     const brand = BRANDS.find((b) => b.id === brandId);
     if (!brand) continue;
+    const progress: SetProgress = { id: brand.id, name: brand.name, kind: "brand", count, max: 3, bonuses: [] };
     brand.bonuses.slice(0, Math.min(count, 3)).forEach((bonus, i) => {
       const title = `${brand.name} ${i + 1}피스`;
       applyBonus(bonus, title);
-      active.push({ title, detail: describeBonus(bonus) });
+      const entry = { title, detail: describeBonus(bonus), set: true };
+      active.push(entry);
+      progress.bonuses.push({ ...entry, title: `${i + 1}피스` });
     });
+    sets.push(progress);
   }
 
   // 3. 기어세트 효과 (2/3/4피스 + 조끼·배낭 세트 탤런트)
   for (const [setId, count] of setCount) {
     const set = GEAR_SETS.find((g) => g.id === setId);
     if (!set) continue;
+    const progress: SetProgress = { id: set.id, name: set.name, kind: "set", count, max: 4, bonuses: [] };
+    sets.push(progress);
     if (count >= 2) {
       applyBonus(set.twoPiece, `${set.name} 2피스`);
-      active.push({ title: `${set.name} 2피스`, detail: describeBonus(set.twoPiece) });
+      active.push({ title: `${set.name} 2피스`, detail: describeBonus(set.twoPiece), set: true });
+      progress.bonuses.push({ title: "2피스", detail: describeBonus(set.twoPiece), set: true });
     }
     if (count >= 3) {
       applyBonus(set.threePiece, `${set.name} 3피스`);
-      active.push({ title: `${set.name} 3피스`, detail: describeBonus(set.threePiece) });
+      active.push({ title: `${set.name} 3피스`, detail: describeBonus(set.threePiece), set: true });
+      progress.bonuses.push({ title: "3피스", detail: describeBonus(set.threePiece), set: true });
     }
     if (count >= 4) {
       const hasChest = build.gear.chest?.source === "set" && build.gear.chest.id === setId;
       const hasBackpack = build.gear.backpack?.source === "set" && build.gear.backpack.id === setId;
       const scaledAmp = set.ampScaling?.(hasChest, hasBackpack);
       const parts = [
-        { title: `${set.name} 4피스: ${set.fourPiece.name}`, bonus: set.fourPiece.bonus, on: true },
-        { title: `조끼 탤런트: ${set.chest.name}`, bonus: set.chest.bonus, on: hasChest },
-        { title: `배낭 탤런트: ${set.backpack.name}`, bonus: set.backpack.bonus, on: hasBackpack },
+        { title: `${set.name} 4피스: ${set.fourPiece.name}`, short: `4피스 ${set.fourPiece.name}`, bonus: set.fourPiece.bonus, on: true },
+        { title: `조끼 탤런트: ${set.chest.name}`, short: `조끼 ${set.chest.name}`, bonus: set.chest.bonus, on: hasChest },
+        { title: `배낭 탤런트: ${set.backpack.name}`, short: `배낭 ${set.backpack.name}`, bonus: set.backpack.bonus, on: hasBackpack },
       ];
       for (const [i, part] of parts.entries()) {
         if (!part.on) continue;
@@ -273,7 +307,8 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
           i === 0 && scaledAmp !== undefined
             ? `증폭 피해 +${+scaledAmp.toFixed(1)}%, ${describeBonus(part.bonus)}`
             : describeBonus(part.bonus);
-        active.push({ title: part.title, detail, conditional: true });
+        active.push({ title: part.title, detail, conditional: true, set: true });
+        progress.bonuses.push({ title: part.short, detail, conditional: true, set: true });
       }
       if (conditional && scaledAmp !== undefined) amps.push({ label: set.fourPiece.name, value: +scaledAmp.toFixed(1) });
     }
@@ -289,20 +324,39 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
     active.push({ title: `${slotId === "chest" ? "조끼" : "배낭"} 탤런트: ${talent.name}`, detail: talent.desc, conditional: true });
   }
 
-  // 5. 무기: 종류 코어, 두 번째 속성, 모드, 탤런트
+  // 5. 무기: 핵심 속성 2개(무기군 대미지 + 무기군 고유), 속성, 모드, 탤런트, 네임드·특급 고유 효과
   const { weapon } = build;
+  const weaponItem = findWeapon(weapon.weaponId);
+  const weaponKind = weaponItem?.kind ?? "normal";
   const weaponClass = WEAPON_CLASSES[weapon.cls];
-  if (weaponClass.core) add(weaponClass.core.stat, weaponClass.core.value, `${weaponClass.label} 코어`);
-  const attr = WEAPON_ATTRIBUTES.find((a) => a.id === weapon.attr);
-  if (attr) add(attr.effect.stat, attr.effect.value, "무기 속성");
-  weapon.mods.forEach((modId) => {
-    const mod = WEAPON_MODS.find((m) => m.id === modId);
-    if (mod) add(mod.effect.stat, mod.effect.value, "무기 모드");
-  });
-  const weaponTalent = WEAPON_TALENTS.find((t) => t.id === weapon.talent);
+  add(weaponClass.typeDmgStat, WEAPON_TYPE_CORE, `${weaponClass.label} 코어`);
+  const classCore = weaponItem?.coreOverride ?? weaponClass.core;
+  if (classCore) add(classCore.stat, classCore.value, `${weaponClass.label} 코어`);
+
+  if (weaponItem?.perfectAttr) {
+    applyBonus(weaponItem.perfectAttr.bonus, `네임드 ${weaponItem.name}`);
+    active.push({ title: `네임드 ${weaponItem.name}`, detail: weaponItem.perfectAttr.desc });
+  } else {
+    const attr = WEAPON_ATTRIBUTES.find((a) => a.id === weapon.attr);
+    if (attr) add(attr.effect.stat, attr.effect.value, "무기 속성");
+  }
+  if (weaponItem?.fixed) {
+    const title = weaponKind === "exotic" ? `특급 ${weaponItem.name}` : `네임드 ${weaponItem.name}`;
+    applyBonus(weaponItem.fixed.bonus, title);
+    active.push({ title, detail: weaponItem.fixed.desc });
+  }
+  // 특급 무기는 부착물이 고정이라 무기 모드를 쓰지 않는다
+  if (weaponKind !== "exotic") {
+    weapon.mods.forEach((modId) => {
+      const mod = WEAPON_MODS.find((m) => m.id === modId);
+      if (mod) add(mod.effect.stat, mod.effect.value, "무기 모드");
+    });
+  }
+  const fixedTalent = weaponItem?.fixedTalent;
+  const weaponTalent = fixedTalent ?? WEAPON_TALENTS.find((t) => t.id === weapon.talent);
   if (weaponTalent) {
     if (conditional) applyBonus(weaponTalent.bonus, weaponTalent.name);
-    active.push({ title: `무기 탤런트: ${weaponTalent.name}`, detail: weaponTalent.desc, conditional: true });
+    active.push({ title: `무기 특수효과: ${weaponTalent.name}`, detail: weaponTalent.desc, conditional: true });
   }
 
   // 6. SHD 레벨 보너스
@@ -312,8 +366,12 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
   const chcRaw = stats.chc;
   const totalArmor = stats.armor * (1 + stats.armorPct / 100);
 
+  sets.sort((x, y) => (x.kind === y.kind ? y.count - x.count : x.kind === "set" ? -1 : 1));
+
   return {
     cores,
+    attrs,
+    sets,
     stats,
     sources,
     amps,

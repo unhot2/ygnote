@@ -39,7 +39,7 @@ export function ConditionPanel({ conditions, onChange }: { conditions: Condition
                 type="button"
                 onClick={() => update({ target })}
                 className={`rounded-md px-3 py-1.5 font-medium ${
-                  conditions.target === target ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
+                  conditions.target === target ? "bg-orange-500 text-white shadow-sm" : "text-gray-500"
                 }`}
               >
                 {label}

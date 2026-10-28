@@ -129,10 +129,10 @@ export const GEAR_SLOTS: { id: GearSlotId; label: string; icon: string; hasMod: 
 
 export type CoreId = "red" | "blue" | "yellow";
 
-export const CORE_ATTRIBUTES: Record<CoreId, { label: string; effect: StatEffect; color: string }> = {
-  red: { label: "무기 피해 +15%", effect: { stat: "wd", value: 15 }, color: "bg-red-500" },
-  blue: { label: "방어도 +170,370", effect: { stat: "armor", value: 170370 }, color: "bg-sky-500" },
-  yellow: { label: "스킬 티어 +1", effect: { stat: "skillTier", value: 1 }, color: "bg-amber-400" },
+export const CORE_ATTRIBUTES: Record<CoreId, { label: string; effect: StatEffect }> = {
+  red: { label: "무기 피해 +15%", effect: { stat: "wd", value: 15 } },
+  blue: { label: "방어도 +170,370", effect: { stat: "armor", value: 170370 } },
+  yellow: { label: "스킬 티어 +1", effect: { stat: "skillTier", value: 1 } },
 };
 
 /** 장비 부가 속성(최대치). 장비 모드도 같은 목록에서 고른다 */

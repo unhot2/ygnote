@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function DivisionPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-gray-50">
-      <header className="flex items-center justify-between gap-4 border-b bg-white p-4">
+    <main className="division-theme flex min-h-screen flex-col">
+      <header className="flex items-center justify-between gap-4 border-b bg-[#0f1726] p-4">
         <h1 className="whitespace-nowrap text-lg font-semibold">
           디비전 시뮬레이터 <span aria-hidden>🟧</span>
         </h1>

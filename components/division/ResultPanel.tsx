@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_CHD, CHC_CAP, CORE_ATTRIBUTES, STAT_INFO, type CoreId, type StatKey } from "@/data/division-gear";
+import { BASE_CHD, CHC_CAP, STAT_INFO, type StatKey } from "@/data/division-gear";
 import type { BuildResult } from "@/lib/division/build";
 import { formatNumber, Panel } from "./ui";
 
@@ -17,7 +17,7 @@ function formatValue(stat: StatKey, value: number) {
   return `${formatNumber(value)}${unit}`;
 }
 
-/** 빌드 계산 결과: 코어 개수, DPS, 피해 버킷, 스탯 합계, 활성 효과 */
+/** DPS 결과: 요약, 발당 피해, 피해 계산 과정, 다음 속성 효율 (스탯 합계·세트 효과는 따로 보여준다) */
 export function ResultPanel({
   result,
   gains,
@@ -36,14 +36,6 @@ export function ResultPanel({
   return (
     <div className="flex flex-col gap-4">
       <Panel title="📊 요약">
-        <div className="mb-3 flex gap-2">
-          {(Object.keys(CORE_ATTRIBUTES) as CoreId[]).map((core) => (
-            <div key={core} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gray-50 py-2 text-sm">
-              <span className={`h-3 w-3 rounded-full ${CORE_ATTRIBUTES[core].color}`} aria-hidden />
-              <b className="text-gray-900">{result.cores[core]}</b>
-            </div>
-          ))}
-        </div>
         <div className="grid grid-cols-2 gap-2">
           <BigStat label="지속 DPS" hint="재장전 포함" value={formatNumber(damage.sustainedDps)} highlight />
           <BigStat label="순간 DPS" hint="탄창 비우는 동안" value={formatNumber(damage.burstDps)} />
@@ -112,28 +104,15 @@ export function ResultPanel({
         </ul>
         <p className="mt-2 text-xs text-gray-400">지금 빌드에 하나를 더했을 때 지속 DPS가 오르는 비율이에요.</p>
       </Panel>
+    </div>
+  );
+}
 
-      <Panel title="✨ 활성 효과">
-        {result.active.length === 0 ? (
-          <p className="text-sm text-gray-400">브랜드 1피스부터 세트 효과가 켜져요.</p>
-        ) : (
-          <ul className="flex flex-col gap-2 text-sm">
-            {result.active.map((a) => (
-              <li key={a.title} className="flex flex-col">
-                <span className="flex items-center gap-1.5 font-medium text-gray-900">
-                  {a.title}
-                  {a.conditional && (
-                    <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">조건부</span>
-                  )}
-                </span>
-                <span className="text-xs text-gray-500">{a.detail}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
-
-      <Panel title="📋 스탯 합계">
+/** 스탯 합계. 스탯을 누르면 어느 장비에서 온 수치인지 펼쳐 보여준다 */
+export function StatTotalsPanel({ result }: { result: BuildResult }) {
+  const { stats } = result;
+  return (
+    <Panel title="📋 스탯 합계">
         <div className="flex flex-col gap-4">
           {STAT_GROUPS.map((group) => {
             const keys = (Object.keys(STAT_INFO) as StatKey[]).filter(
@@ -174,14 +153,13 @@ export function ResultPanel({
           })}
         </div>
       </Panel>
-    </div>
   );
 }
 
 function BigStat({ label, value, hint, highlight }: { label: string; value: string; hint?: string; highlight?: boolean }) {
   return (
-    <div className={`flex flex-col rounded-xl p-3 ${highlight ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"}`}>
-      <span className={`text-xs ${highlight ? "text-gray-300" : "text-gray-500"}`}>{label}</span>
+    <div className={`flex flex-col rounded-xl p-3 ${highlight ? "bg-orange-500 text-white" : "bg-gray-50 text-gray-900"}`}>
+      <span className={`text-xs ${highlight ? "text-white/80" : "text-gray-500"}`}>{label}</span>
       <b className="text-lg tabular-nums leading-tight">{value}</b>
       {hint && <span className="text-[11px] text-gray-400">{hint}</span>}
     </div>

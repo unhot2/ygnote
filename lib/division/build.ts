@@ -16,6 +16,7 @@ import {
   type StatEffect,
   type StatKey,
 } from "@/data/division-gear";
+import { EXOTIC_GEAR, findExoticGear, NINJABIKE_BACKPACK_ID } from "@/data/division-exotic-gear";
 import { NAMED_ITEMS, type NamedItem } from "@/data/division-named";
 import {
   findWeapon,
@@ -29,9 +30,9 @@ import {
 } from "@/data/division-weapons";
 
 export interface GearPiece {
-  /** 브랜드 / 기어세트 / 네임드 장비 */
-  source: "brand" | "set" | "named";
-  /** BRANDS, GEAR_SETS 또는 NAMED_ITEMS의 id */
+  /** 브랜드 / 기어세트 / 네임드 / 특급 장비 */
+  source: "brand" | "set" | "named" | "exotic";
+  /** BRANDS, GEAR_SETS, NAMED_ITEMS 또는 EXOTIC_GEAR의 id */
   id: string;
   core: CoreId;
   /** 부가 속성 id. 칸 수는 minorSlotCount()를 따른다 */
@@ -40,6 +41,15 @@ export interface GearPiece {
   mod: string | null;
   /** 브랜드 조끼·배낭 탤런트. 기어세트 조끼·배낭은 세트 탤런트가 자동으로 붙는다 */
   talent: string | null;
+  /** 프로토타입 속성 key ("core", "minor-0", "minor-1", "mod"). 수치가 1.5배가 된다 */
+  proto?: string[];
+}
+
+/** 프로토타입 속성은 일반 최대치의 1.5배 */
+export const PROTO_MULTIPLIER = 1.5;
+
+export function protoMultiplier(piece: GearPiece, key: string): number {
+  return piece.proto?.includes(key) ? PROTO_MULTIPLIER : 1;
 }
 
 export interface WeaponBuild {
@@ -86,12 +96,30 @@ export function namedBrand(item: NamedItem) {
 export function minorSlotCount(source: GearPiece["source"], id: string): number {
   if (source === "brand") return 2;
   if (source === "set") return 1;
+  if (source === "exotic") return findExoticGear(id)?.attrs.length ?? 2;
   const item = findNamed(id);
   return item?.kind === "talent" && (item.slot === "chest" || item.slot === "backpack") ? 2 : 1;
 }
 
 export function emptyGearPiece(source: GearPiece["source"], id: string): GearPiece {
-  return { source, id, core: "red", minors: Array(minorSlotCount(source, id)).fill(null), mod: null, talent: null };
+  return applyExoticFixed({ source, id, core: "red", minors: Array(minorSlotCount(source, id)).fill(null), mod: null, talent: null });
+}
+
+/**
+ * 특급 보호장구는 고정 코어·속성을 장비에 그대로 채워 넣는다.
+ * 고를 수 있는 칸("any")은 기존 값을 살리고, 계산하지 않는 속성("text:")은 비워 둔다.
+ */
+export function applyExoticFixed(piece: GearPiece): GearPiece {
+  if (piece.source !== "exotic") return piece;
+  const exotic = findExoticGear(piece.id);
+  if (!exotic) return piece;
+  return {
+    ...piece,
+    core: exotic.core === "any" ? piece.core : exotic.core,
+    minors: exotic.attrs.map((attr, i) => (attr === "any" ? piece.minors[i] ?? null : attr.startsWith("text:") ? null : attr)),
+    mod: exotic.mod ? piece.mod : null,
+    talent: null,
+  };
 }
 
 export function weaponBuildFrom(weaponId: string): WeaponBuild {
@@ -117,8 +145,29 @@ export function createEmptyBuild(): Build {
   };
 }
 
+/**
+ * 장비 한 칸을 바꾼다. 특급 보호장구는 한 번에 하나만 낄 수 있어,
+ * 특급을 끼우면 다른 칸에 있던 특급 장비는 빠진다.
+ */
+export function equipGear(gear: Build["gear"], slotId: GearSlotId, piece: GearPiece | null): Build["gear"] {
+  const next = { ...gear, [slotId]: piece };
+  if (piece?.source === "exotic") {
+    for (const slot of GEAR_SLOTS) {
+      if (slot.id !== slotId && next[slot.id]?.source === "exotic") next[slot.id] = null;
+    }
+  }
+  return next;
+}
+
+/** slotId가 아닌 다른 칸에 낀 특급 보호장구 (없으면 undefined) */
+export function otherExoticGear(gear: Build["gear"], slotId: GearSlotId) {
+  const slot = GEAR_SLOTS.find((s) => s.id !== slotId && gear[s.id]?.source === "exotic");
+  return slot ? { slotLabel: slot.label, name: gearPieceName(gear[slot.id]!) } : undefined;
+}
+
 export function gearPieceName(piece: GearPiece): string {
-  const list = piece.source === "brand" ? BRANDS : piece.source === "set" ? GEAR_SETS : NAMED_ITEMS;
+  const list =
+    piece.source === "brand" ? BRANDS : piece.source === "set" ? GEAR_SETS : piece.source === "exotic" ? EXOTIC_GEAR : NAMED_ITEMS;
   return list.find((item) => item.id === piece.id)?.name ?? piece.id;
 }
 
@@ -229,17 +278,17 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
     if (!piece) continue;
     cores[piece.core] += 1;
     const core = CORE_ATTRIBUTES[piece.core].effect;
-    add(core.stat, core.value, `${slot.label} 코어`);
-    piece.minors.slice(0, minorSlotCount(piece.source, piece.id)).forEach((minorId) => {
+    add(core.stat, core.value * protoMultiplier(piece, "core"), `${slot.label} 코어`);
+    piece.minors.slice(0, minorSlotCount(piece.source, piece.id)).forEach((minorId, i) => {
       const minor = MINOR_ATTRIBUTES.find((m) => m.id === minorId);
       if (!minor) return;
-      add(minor.effect.stat, minor.effect.value, `${slot.label} 속성`);
+      add(minor.effect.stat, minor.effect.value * protoMultiplier(piece, `minor-${i}`), `${slot.label} 속성`);
       attrs[minor.kind] += 1;
     });
     if (slot.hasMod && piece.mod) {
       const mod = MINOR_ATTRIBUTES.find((m) => m.id === piece.mod);
       if (mod) {
-        add(mod.effect.stat, mod.effect.value, `${slot.label} 모드`);
+        add(mod.effect.stat, mod.effect.value * protoMultiplier(piece, "mod"), `${slot.label} 모드`);
         attrs[mod.kind] += 1;
       }
     }
@@ -255,8 +304,22 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
       if (brand) brandCount.set(brand.id, (brandCount.get(brand.id) ?? 0) + 1);
       continue;
     }
+    if (piece.source === "exotic") {
+      // 특급은 세트 개수에 들어가지 않고 고유 특수효과만 붙는다
+      const exotic = findExoticGear(piece.id);
+      if (!exotic) continue;
+      const title = `특급 ${exotic.name}: ${exotic.talentName}`;
+      if (conditional) applyBonus(exotic.bonus, title);
+      active.push({ title, detail: exotic.desc, conditional: true });
+      continue;
+    }
     const counter = piece.source === "brand" ? brandCount : setCount;
     counter.set(piece.id, (counter.get(piece.id) ?? 0) + 1);
+  }
+
+  // 닌자바이크 메신저 백팩: 장착한 브랜드·기어세트 개수를 각각 1개씩 늘린다
+  if (build.gear.backpack?.source === "exotic" && build.gear.backpack.id === NINJABIKE_BACKPACK_ID) {
+    for (const counter of [brandCount, setCount]) for (const [id, count] of counter) counter.set(id, count + 1);
   }
 
   // 2. 브랜드 세트 효과 (1~3피스)

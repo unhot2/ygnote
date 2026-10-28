@@ -10,7 +10,14 @@ import { CoreIcon } from "@/components/division/CoreIcon";
 import { formatNumber } from "@/components/division/ui";
 import { WeaponEditor } from "@/components/division/WeaponEditor";
 import { GEAR_SLOTS, type GearSlotId } from "@/data/division-gear";
-import { computeBuild, createEmptyBuild, redAttributeGains, type Build } from "@/lib/division/build";
+import {
+  computeBuild,
+  createEmptyBuild,
+  equipGear,
+  otherExoticGear,
+  redAttributeGains,
+  type Build,
+} from "@/lib/division/build";
 
 // 지금 만들고 있는 빌드를 이 브라우저에만 저장해 둔다. 데이터 구조가 바뀌면 키 버전을 올린다.
 const STORAGE_KEY = "ygnote:division-build:v1";
@@ -111,7 +118,8 @@ export function DivisionPageClient() {
         <GearEditor
           slotId={editingSlot}
           piece={build.gear[editingSlot]}
-          onChange={(piece) => setBuild((b) => ({ ...b, gear: { ...b.gear, [editingSlot]: piece } }))}
+          otherExotic={otherExoticGear(build.gear, editingSlot)}
+          onChange={(piece) => setBuild((b) => ({ ...b, gear: equipGear(b.gear, editingSlot, piece) }))}
           onClose={() => setEditingSlot(null)}
         />
       )}

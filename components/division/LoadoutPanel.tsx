@@ -117,7 +117,7 @@ export function LoadoutPanel({
               {result.sets.map((set) => (
                 <li
                   key={`${set.kind}:${set.id}`}
-                  className={`border-l-[3px] bg-gray-50 px-2.5 py-2 ${set.kind === "set" ? "border-violet-500" : "border-gray-400"}`}
+                  className={`border-l-[3px] bg-gray-50 px-2.5 py-2 ${set.kind === "set" ? "border-emerald-500" : "border-yellow-400"}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-xs font-semibold text-gray-900">{set.name}</span>

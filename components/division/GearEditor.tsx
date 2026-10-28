@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   BRANDS,
   CORE_ATTRIBUTES,
@@ -9,11 +10,23 @@ import {
   MINOR_ATTRIBUTES,
   type CoreId,
   type GearSlotId,
+  type StatEffect,
 } from "@/data/division-gear";
+import { EXOTIC_GEAR, findExoticGear } from "@/data/division-exotic-gear";
 import { NAMED_ITEMS } from "@/data/division-named";
-import { emptyGearPiece, findNamed, minorSlotCount, namedBrand, type GearPiece } from "@/lib/division/build";
+import {
+  applyExoticFixed,
+  emptyGearPiece,
+  findNamed,
+  formatStat,
+  minorSlotCount,
+  namedBrand,
+  PROTO_MULTIPLIER,
+  type GearPiece,
+} from "@/lib/division/build";
 import { describeStats, EditorSheet, KindTabs, NONE, StepList, type Step, type StepOption } from "./EditorParts";
 import { GearLogo } from "./GearLogo";
+import { ExoticGearImage } from "./ExoticGearImage";
 import { minorLabel } from "./GearSlotCard";
 
 const MINOR_OPTIONS: StepOption[] = MINOR_ATTRIBUTES.map((m) => ({
@@ -26,35 +39,42 @@ const SOURCE_TABS = [
   ["brand", "브랜드"],
   ["named", "네임드"],
   ["set", "기어세트"],
+  ["exotic", "특급"],
   [null, "비우기"],
 ] as const;
 
 /**
  * 장비 한 칸을 고치는 시트.
- * 왼쪽에는 브랜드·네임드·기어세트를 한 줄로 세로 스크롤하고, 오른쪽에서 코어·속성·개조·탤런트를 고른다.
+ * 왼쪽에는 브랜드·네임드·기어세트·특급을 한 줄로 세로 스크롤하고, 오른쪽에서 코어·속성·개조·탤런트를 고른다.
  * 바꾸는 즉시 빌드에 반영한다.
  */
 export function GearEditor({
   slotId,
   piece,
+  otherExotic,
   onChange,
   onClose,
 }: {
   slotId: GearSlotId;
   piece: GearPiece | null;
+  /** 다른 칸에 낀 특급 보호장구. 이 칸에 특급을 끼우면 그 장비가 빠진다 */
+  otherExotic?: { slotLabel: string; name: string };
   onChange: (piece: GearPiece | null) => void;
   onClose: () => void;
 }) {
   const slot = GEAR_SLOTS.find((s) => s.id === slotId)!;
+  // 편집 창을 열 때 다른 칸에 있던 특급. 이 칸에 특급을 끼우면 바로 빠지므로 처음 값을 기억해 안내한다
+  const [replacedExotic] = useState(otherExotic);
 
   const namedForSlot = NAMED_ITEMS.filter((item) => item.slot === slotId);
+  const exoticForSlot = EXOTIC_GEAR.filter((item) => item.slot === slotId);
   const listFor = (source: GearPiece["source"]) =>
-    source === "brand" ? BRANDS : source === "set" ? GEAR_SETS : namedForSlot;
+    source === "brand" ? BRANDS : source === "set" ? GEAR_SETS : source === "exotic" ? exoticForSlot : namedForSlot;
 
   const setSource = (source: GearPiece["source"] | null) => {
     if (source === null) return onChange(null);
     if (piece?.source === source) return;
-    onChange({ ...emptyGearPiece(source, listFor(source)[0].id), core: piece?.core ?? "red" });
+    onChange(applyExoticFixed({ ...emptyGearPiece(source, listFor(source)[0].id), core: piece?.core ?? "red" }));
   };
 
   const update = (patch: Partial<GearPiece>) => piece && onChange({ ...piece, ...patch });
@@ -64,15 +84,31 @@ export function GearEditor({
     if (!piece) return;
     const count = minorSlotCount(piece.source, id);
     const minors = Array.from({ length: count }, (_, i) => piece.minors[i] ?? null);
-    update({ id, minors, talent: null });
+    // 특급은 고정 코어·속성을 채워 넣는다
+    onChange(applyExoticFixed({ ...piece, id, minors, talent: null }));
   };
 
   const named = piece?.source === "named" ? findNamed(piece.id) : undefined;
   const brand =
     piece?.source === "brand" ? BRANDS.find((b) => b.id === piece.id) : named ? namedBrand(named) : undefined;
   const set = piece?.source === "set" ? GEAR_SETS.find((g) => g.id === piece.id) : undefined;
+  const exotic = piece?.source === "exotic" ? findExoticGear(piece.id) : undefined;
   const setTalent = set && slot.hasTalent ? (slotId === "chest" ? set.chest : set.backpack) : null;
-  const selected = named ?? brand ?? set;
+  const selected = exotic ?? named ?? brand ?? set;
+
+  // 프로토타입 토글: 켜면 해당 속성 수치를 1.5배로 계산하고 보라색으로 보여준다
+  const protoFor = (key: string, effect: StatEffect | undefined): Step["proto"] => {
+    if (!piece) return undefined;
+    const on = piece.proto?.includes(key) ?? false;
+    return {
+      on,
+      toggle: () => {
+        const current = piece.proto ?? [];
+        update({ proto: on ? current.filter((k) => k !== key) : [...current, key] });
+      },
+      label: effect ? formatStat(effect.stat, effect.value * PROTO_MULTIPLIER) : undefined,
+    };
+  };
 
   const steps: Step[] = [];
   if (piece) {
@@ -86,6 +122,9 @@ export function GearEditor({
         core: { kind: core, variant: "core" },
       })),
       select: (core) => update({ core: (core ?? "red") as CoreId }),
+      proto: protoFor("core", CORE_ATTRIBUTES[piece.core].effect),
+      // 특급 장비의 고정 코어는 바꿀 수 없다
+      locked: exotic && exotic.core !== "any" ? { label: CORE_ATTRIBUTES[piece.core].label } : undefined,
     });
     // 네임드 고유 효과가 속성 자리를 차지하면 속성 1에 고정으로 넣는다 (조끼·배낭은 탤런트 자리)
     const namedTakesTalent = named?.kind === "talent" && (slotId === "chest" || slotId === "backpack");
@@ -113,15 +152,20 @@ export function GearEditor({
           minors[i] = id;
           update({ minors });
         },
+        proto: protoFor(`minor-${i}`, MINOR_ATTRIBUTES.find((m) => m.id === piece.minors[i])?.effect),
+        locked: exotic && exotic.attrs[i] !== "any"
+          ? { label: exotic.attrs[i].startsWith("text:") ? exotic.attrs[i].slice(5) : minorLabel(exotic.attrs[i]) }
+          : undefined,
       });
     }
-    if (slot.hasMod) {
+    if (slot.hasMod && (!exotic || exotic.mod)) {
       steps.push({
         key: "mod",
         title: "보호장구 개조",
         value: piece.mod,
         options: [NONE, ...MINOR_OPTIONS],
         select: (mod) => update({ mod }),
+        proto: protoFor("mod", MINOR_ATTRIBUTES.find((m) => m.id === piece.mod)?.effect),
       });
     }
     if (slot.hasTalent && piece.source === "brand") {
@@ -138,6 +182,16 @@ export function GearEditor({
       });
     }
     if (named && namedTakesTalent) steps.push(lockedStep("탤런트"));
+    if (exotic) {
+      steps.push({
+        key: "exotic-talent",
+        title: "특수효과",
+        value: null,
+        options: [],
+        select: () => {},
+        locked: { label: exotic.talentName, desc: exotic.desc },
+      });
+    }
   }
 
   // 이미 장착된 장비를 열면 값이 정해진 단계(코어 포함)는 접힌 채로 시작한다
@@ -166,10 +220,18 @@ export function GearEditor({
                       isActive ? "bg-[#1a2438] shadow-sm ring-2 ring-orange-500" : "hover:bg-[#1a2438]"
                     }`}
                   >
-                    <GearLogo source={piece.source} id={item.id} name={item.name} className="h-11 w-11" />
+                    {piece.source === "exotic" ? (
+                      <ExoticGearImage id={item.id} slot={slotId} className="h-11 w-11" />
+                    ) : (
+                      <GearLogo source={piece.source} id={item.id} name={item.name} className="h-11 w-11" />
+                    )}
                     <span
                       className={`line-clamp-2 text-center text-[10px] leading-tight ${
-                        piece.source === "named" ? "font-medium text-amber-700" : "text-gray-700"
+                        piece.source === "named"
+                          ? "font-medium text-amber-700"
+                          : piece.source === "exotic"
+                            ? "font-medium text-red-400"
+                            : "text-gray-700"
                       }`}
                     >
                       {item.name}
@@ -182,15 +244,32 @@ export function GearEditor({
 
           {/* 오른쪽: 선택한 장비 정보와 단계별 선택 */}
           <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
+            {/* 특급 보호장구는 하나만 낄 수 있다 (이 칸에 특급을 끼우는 순간 다른 칸의 특급은 빠진다) */}
+            {piece.source === "exotic" && (
+              <p className="rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                {replacedExotic
+                  ? `특급 보호장구는 1개만 낄 수 있어요. ${replacedExotic.slotLabel}의 ${replacedExotic.name}이(가) 빠졌어요.`
+                  : "특급 보호장구는 1개만 낄 수 있어요. 다른 칸에 특급을 끼우면 이 장비가 빠져요."}
+              </p>
+            )}
             <div className="flex gap-3 rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600">
-              <GearLogo source={piece.source} id={piece.id} name={selected?.name ?? ""} className="h-12 w-12" />
+              {exotic ? (
+                <ExoticGearImage id={piece.id} slot={slotId} className="h-16 w-16" />
+              ) : (
+                <GearLogo source={piece.source} id={piece.id} name={selected?.name ?? ""} className="h-12 w-12" />
+              )}
               <div className="flex min-w-0 flex-col">
-                <b className={`text-sm ${named ? "text-amber-700" : "text-gray-900"}`}>{selected?.name}</b>
+                <b className={`text-sm ${exotic ? "text-red-400" : named ? "text-amber-700" : "text-gray-900"}`}>{selected?.name}</b>
                 <span className="mb-1 text-[11px] text-gray-400">
                   {selected?.en}
                   {named && ` · ${named.brand}`}
                 </span>
                 {named && !brand && <p className="text-gray-400">브랜드 세트 효과 데이터가 없는 브랜드예요.</p>}
+                {exotic && (
+                  <p>
+                    <b className="text-gray-800">특수효과 {exotic.talentName}</b> {exotic.desc}
+                  </p>
+                )}
                 {brand &&
                   brand.bonuses.map((bonus, i) => (
                     <p key={i}>
@@ -227,7 +306,7 @@ export function GearEditor({
         </div>
       ) : (
         <p className="flex flex-1 items-center justify-center p-6 text-sm text-gray-400">
-          위에서 브랜드·네임드·기어세트 중 하나를 고르세요.
+          위에서 브랜드·네임드·기어세트·특급 중 하나를 고르세요.
         </p>
       )}
     </EditorSheet>

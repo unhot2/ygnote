@@ -14,7 +14,7 @@ import {
 import { formatStat, weaponBuildFrom, type WeaponBuild } from "@/lib/division/build";
 import { describeStats, EditorSheet, KindTabs, NONE, StepList, type Step } from "./EditorParts";
 import { NumberField } from "./ui";
-import { WEAPON_KIND_BADGE, WeaponTile } from "./WeaponTile";
+import { WEAPON_KIND_BADGE, WeaponImage } from "./WeaponTile";
 
 const KIND_TABS = [
   ["normal", "일반"],
@@ -148,7 +148,7 @@ export function WeaponEditor({
                           isActive ? "bg-[#1a2438] shadow-sm ring-2 ring-orange-500" : "hover:bg-[#1a2438]"
                         }`}
                       >
-                        <WeaponTile cls={w.cls} kind={w.kind} className="h-9 w-9" />
+                        <WeaponImage weaponId={w.id} cls={w.cls} kind={w.kind} width={160} className="h-9 w-[4.5rem]" />
                         <span className={`line-clamp-2 text-center text-[10px] font-medium leading-tight ${WEAPON_KIND_BADGE[w.kind].text}`}>
                           {w.name}
                         </span>
@@ -164,7 +164,7 @@ export function WeaponEditor({
         {/* 오른쪽: 선택한 무기 정보, 단계별 선택, 기본 수치 */}
         <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
           <div className="flex gap-3 rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600">
-            <WeaponTile cls={weapon.cls} kind={kind} className="h-12 w-12" />
+            <WeaponImage weaponId={weapon.weaponId} cls={weapon.cls} kind={kind} className="h-14 w-28 rounded-lg bg-[#0b111d]" />
             <div className="flex min-w-0 flex-col">
               <b className={`text-sm ${WEAPON_KIND_BADGE[kind].text}`}>{item?.name ?? weapon.weaponId}</b>
               <span className="mb-1 text-[11px] text-gray-400">

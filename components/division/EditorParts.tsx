@@ -116,6 +116,8 @@ export interface Step {
   locked?: { label: string; desc?: string };
   /** 고른 뒤 접혔을 때 아래에 보여줄 설명 */
   note?: string;
+  /** 프로토타입 토글 (켜면 수치 1.5배). label은 1.5배가 반영된 현재 값 */
+  proto?: { on: boolean; toggle: () => void; label?: string };
 }
 
 export const NONE: StepOption = { value: null, label: "없음" };
@@ -164,24 +166,44 @@ export function StepList({ steps, initialChosen, resetKey }: { steps: Step[]; in
         const current = step.options.find((o) => o.value === step.value) ?? NONE;
         return (
           <li key={step.key} className="rounded-xl border border-gray-200">
-            <button
-              type="button"
-              onClick={() => update((next) => (next.has(step.key) ? next.delete(step.key) : next.add(step.key)))}
-              aria-expanded={isOpen}
-              className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
-            >
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[11px] font-bold text-white">
-                {index + 1}
-              </span>
-              <span className="shrink-0 text-xs font-medium text-gray-500">{step.title}</span>
-              <span className="ml-auto flex min-w-0 items-center gap-1.5 text-sm text-gray-900">
-                {current.core && <CoreIcon kind={current.core.kind} variant={current.core.variant} className="h-4 w-4" />}
-                <span className="truncate">{current.label}</span>
-              </span>
-              <span className={`text-gray-300 transition-transform ${isOpen ? "rotate-90" : ""}`} aria-hidden>
-                ›
-              </span>
-            </button>
+            <div className="flex items-center gap-1 pr-2">
+              <button
+                type="button"
+                onClick={() => update((next) => (next.has(step.key) ? next.delete(step.key) : next.add(step.key)))}
+                aria-expanded={isOpen}
+                className="flex min-w-0 flex-1 items-center gap-2 py-2.5 pl-3 text-left"
+              >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[11px] font-bold text-white">
+                  {index + 1}
+                </span>
+                <span className="shrink-0 text-xs font-medium text-gray-500">{step.title}</span>
+                <span
+                  className={`ml-auto flex min-w-0 items-center gap-1.5 text-sm ${step.proto?.on ? "font-semibold text-purple-400" : "text-gray-900"}`}
+                >
+                  {current.core && <CoreIcon kind={current.core.kind} variant={current.core.variant} className="h-4 w-4" />}
+                  <span className="truncate">{(step.proto?.on && step.proto.label) || current.label}</span>
+                </span>
+                <span className={`text-gray-300 transition-transform ${isOpen ? "rotate-90" : ""}`} aria-hidden>
+                  ›
+                </span>
+              </button>
+              {/* 프로토타입 토글: 켜면 이 속성 수치가 1.5배가 된다 */}
+              {step.proto && (
+                <button
+                  type="button"
+                  onClick={step.proto.toggle}
+                  aria-pressed={step.proto.on}
+                  title="프로토타입 속성 (수치 1.5배)"
+                  className={`shrink-0 rounded-md border px-1.5 py-1 text-[10px] font-semibold transition-colors ${
+                    step.proto.on
+                      ? "border-purple-500 bg-purple-500 text-white"
+                      : "border-gray-200 text-gray-400 hover:border-purple-400 hover:text-purple-400"
+                  }`}
+                >
+                  프로토
+                </button>
+              )}
+            </div>
             {isOpen && (
               <div className="grid grid-cols-1 gap-1.5 border-t p-2 sm:grid-cols-2">
                 {step.options.map((option) => {

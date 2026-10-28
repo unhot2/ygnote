@@ -14,11 +14,14 @@ export function GearLogo({
   id,
   name,
   className = "h-10 w-10",
+  bare = false,
 }: {
   source: GearPiece["source"];
   id: string;
   name: string;
   className?: string;
+  /** 인게임 타일처럼 배경 없이 반투명하게 (기어세트 배너의 검은 바탕은 screen 합성으로 지운다) */
+  bare?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const named = source === "named" ? findNamed(id) : undefined;
@@ -31,8 +34,8 @@ export function GearLogo({
   return (
     <span
       className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${
-        source === "set" ? "bg-black" : "bg-[#0b111d]"
-      } ${named ? "ring-2 ring-amber-400" : ""} ${className}`}
+        bare ? "opacity-60 mix-blend-screen" : source === "set" ? "bg-black" : "bg-[#0b111d]"
+      } ${named && !bare ? "ring-2 ring-amber-400" : ""} ${className}`}
     >
       {path && !failed ? (
         // 외부(팬덤 위키) 이미지라 next/image 최적화 설정 없이 그대로 쓴다

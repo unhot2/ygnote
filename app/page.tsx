@@ -11,6 +11,13 @@ export default function Home() {
         고레와스폰사데스
         <span aria-hidden>♨️</span>
       </Link>
+      <Link
+        href="/division"
+        className="flex h-14 items-center justify-center gap-2 rounded-full bg-orange-600 px-8 text-lg font-medium text-white transition-colors hover:bg-orange-500"
+      >
+        디비전 시뮬레이터
+        <span aria-hidden>🟧</span>
+      </Link>
     </main>
   );
 }

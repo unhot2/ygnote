@@ -409,6 +409,8 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
   add(weaponClass.typeDmgStat, WEAPON_TYPE_CORE, `${weaponClass.label} 코어`);
   const classCore = weaponItem?.coreOverride ?? weaponClass.core;
   if (classCore) add(classCore.stat, classCore.value, `${weaponClass.label} 코어`);
+  // 무기군 기본 헤드샷 대미지 (돌격소총 55%, 권총 100% 등). 장비 헤드샷 대미지와 더해진다
+  if (weaponClass.baseHsd > 0) add("hsd", weaponClass.baseHsd, `${weaponClass.label} 기본 헤드샷`);
 
   if (weaponItem?.perfectAttr) {
     applyBonus(weaponItem.perfectAttr.bonus, `네임드 ${weaponItem.name}`);

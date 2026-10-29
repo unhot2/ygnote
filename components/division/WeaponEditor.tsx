@@ -174,6 +174,9 @@ export function WeaponEditor({
                 <b className="text-gray-800">핵심 속성</b> {weaponClass.label} 대미지 +{WEAPON_TYPE_CORE}%
                 {classCore && `, ${formatStat(classCore.stat, classCore.value)}`}
               </p>
+              <p>
+                <b className="text-gray-800">기본 헤드샷 대미지</b> {weaponClass.baseHsd}%
+              </p>
               {item?.fixedTalent && describeStats(item.fixedTalent.bonus) && (
                 <p>
                   <b className="text-gray-800">특수효과 반영</b> {describeStats(item.fixedTalent.bonus)}

@@ -11,18 +11,21 @@ import type { Bonus, StatEffect, StatKey } from "./division-gear";
 
 export type WeaponClassId = "ar" | "smg" | "lmg" | "rifle" | "mmr" | "shotgun" | "pistol";
 
-/** 무기 종류별 핵심 속성: 무기군 대미지 15% + 무기군 고유 속성 */
+/**
+ * 무기 종류별 핵심 속성(무기군 대미지 15% + 무기군 고유 속성)과 기본 헤드샷 대미지.
+ * baseHsd는 장비 헤드샷 대미지와 더해지는 무기군 기본값 (나무위키 "무기" 문서 각 무기군 항목)
+ */
 export const WEAPON_CLASSES: Record<
   WeaponClassId,
-  { label: string; typeDmgStat: StatKey; core: StatEffect | null; coreLabel: string }
+  { label: string; typeDmgStat: StatKey; core: StatEffect | null; coreLabel: string; baseHsd: number }
 > = {
-  ar: { label: "돌격소총", typeDmgStat: "arDmg", core: { stat: "dth", value: 21 }, coreLabel: "생명력 대미지 +21%" },
-  smg: { label: "기관단총", typeDmgStat: "smgDmg", core: { stat: "chc", value: 21 }, coreLabel: "치명타 확률 +21%" },
-  lmg: { label: "경기관총", typeDmgStat: "lmgDmg", core: { stat: "dtooc", value: 12 }, coreLabel: "비엄폐 대상 대미지 +12%" },
-  rifle: { label: "소총", typeDmgStat: "rifleDmg", core: { stat: "chd", value: 34 }, coreLabel: "치명타 대미지 +34%" },
-  mmr: { label: "지정사수소총", typeDmgStat: "mmrDmg", core: { stat: "hsd", value: 111 }, coreLabel: "헤드샷 대미지 +111%" },
-  shotgun: { label: "산탄총", typeDmgStat: "shotgunDmg", core: { stat: "dta", value: 12 }, coreLabel: "방어도 대상 대미지 +12%" },
-  pistol: { label: "권총", typeDmgStat: "pistolDmg", core: null, coreLabel: "고유 핵심 속성 없음" },
+  ar: { label: "돌격소총", typeDmgStat: "arDmg", core: { stat: "dth", value: 21 }, coreLabel: "생명력 대미지 +21%", baseHsd: 55 },
+  smg: { label: "기관단총", typeDmgStat: "smgDmg", core: { stat: "chc", value: 21 }, coreLabel: "치명타 확률 +21%", baseHsd: 50 },
+  lmg: { label: "경기관총", typeDmgStat: "lmgDmg", core: { stat: "dtooc", value: 12 }, coreLabel: "비엄폐 대상 대미지 +12%", baseHsd: 65 },
+  rifle: { label: "소총", typeDmgStat: "rifleDmg", core: { stat: "chd", value: 34 }, coreLabel: "치명타 대미지 +34%", baseHsd: 80 },
+  mmr: { label: "지정사수소총", typeDmgStat: "mmrDmg", core: { stat: "hsd", value: 111 }, coreLabel: "헤드샷 대미지 +111%", baseHsd: 0 },
+  shotgun: { label: "산탄총", typeDmgStat: "shotgunDmg", core: { stat: "dta", value: 12 }, coreLabel: "방어도 대상 대미지 +12%", baseHsd: 45 },
+  pistol: { label: "권총", typeDmgStat: "pistolDmg", core: null, coreLabel: "고유 핵심 속성 없음", baseHsd: 100 },
 };
 
 /** 무기군 대미지 핵심 속성 (모든 무기 공통) */

@@ -13,11 +13,12 @@ import {
   findNamed,
   formatStat,
   gearPieceName,
-  PROTO_MULTIPLIER,
+  namedAttrLabel,
   protoMultiplier,
   type GearPiece,
 } from "@/lib/division/build";
 import { GearLogo } from "./GearLogo";
+import { CORE_NAMES, CoreIcon } from "./CoreIcon";
 import { ExoticGearImage } from "./ExoticGearImage";
 import { GearSlotIcon } from "./GearSlotIcon";
 
@@ -36,6 +37,9 @@ export const SOURCE_STYLE: Record<GearPiece["source"], { label: string; tint: st
   set: { label: "기어세트", tint: "from-emerald-500/30", stripe: "bg-emerald-500" },
   exotic: { label: "특급", tint: "from-red-500/35", stripe: "bg-red-500" },
 };
+
+/** 프로토타입 속성이 붙은 장비의 타일 색 */
+const PROTO_STYLE = { label: "프로토타입", tint: "from-purple-500/40", stripe: "bg-purple-500" };
 
 /** 공격·방어·스킬 속성 글자색 */
 const CORE_TEXT: Record<CoreId, string> = { red: "text-red-400", blue: "text-sky-400", yellow: "text-yellow-400" };
@@ -67,16 +71,16 @@ export function GearSlotCard({
     }
     return GEAR_TALENTS.find((t) => t.id === piece.talent)?.name ?? null;
   })();
-  // 오른쪽에 글자로 늘어놓는 줄: 핵심 속성, 네임드 고유 속성, 부가 속성, 보호장구 개조
+  // 오른쪽에 글자로 늘어놓는 줄: 네임드 고유 속성, 부가 속성, 보호장구 개조 (코어는 이름 앞 아이콘으로 보여준다)
   const lines: { text: string; className: string }[] = [];
+  // 프로토타입 속성이 하나라도 있으면 타일 배경을 보라색으로 바꾼다
+  const hasProto = (piece?.proto?.length ?? 0) > 0;
+  const style = piece ? (hasProto ? PROTO_STYLE : SOURCE_STYLE[piece.source]) : null;
   if (piece) {
-    const core = CORE_ATTRIBUTES[piece.core];
-    const coreProto = protoMultiplier(piece, "core") > 1;
-    lines.push({
-      text: coreProto ? formatStat(core.effect.stat, core.effect.value * PROTO_MULTIPLIER) : core.label,
-      className: `font-semibold ${coreProto ? PROTO_TEXT : CORE_TEXT[piece.core]}`,
-    });
-    if (named?.kind === "attr") lines.push({ text: named.desc, className: "font-medium text-amber-700" });
+    if (named?.kind === "attr") {
+      const mult = protoMultiplier(piece, "named");
+      lines.push({ text: namedAttrLabel(named, mult), className: mult > 1 ? PROTO_TEXT : "font-medium text-amber-700" });
+    }
     const attrLine = (id: string | null, key: string, prefix = "") => {
       const attr = MINOR_ATTRIBUTES.find((m) => m.id === id);
       if (!attr) return;
@@ -100,10 +104,10 @@ export function GearSlotCard({
       type="button"
       onClick={onClick}
       className={`relative flex min-h-28 overflow-hidden rounded-lg border border-gray-200 bg-[#1a2438] text-left transition-colors hover:border-orange-400 ${
-        piece ? `bg-linear-to-r ${SOURCE_STYLE[piece.source].tint} to-transparent` : "hover:bg-orange-50/40"
+        style ? `bg-linear-to-r ${style.tint} to-transparent` : "hover:bg-orange-50/40"
       }`}
     >
-      <span className={`w-1.5 shrink-0 ${piece ? SOURCE_STYLE[piece.source].stripe : "bg-gray-100"}`} aria-hidden />
+      <span className={`w-1.5 shrink-0 ${style ? style.stripe : "bg-gray-100"}`} aria-hidden />
       {piece ? (
         <span className="flex min-w-0 flex-1 gap-2 p-2">
           {/* 왼쪽: 큰 브랜드 로고 (기어세트는 엠블럼) */}
@@ -118,10 +122,15 @@ export function GearSlotCard({
           </span>
           {/* 오른쪽: 이름과 속성 글자 */}
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span
-              className={`line-clamp-2 text-xs font-semibold leading-tight ${exotic ? "text-red-400" : named ? "text-amber-700" : "text-gray-900"}`}
-            >
-              {gearPieceName(piece)}
+            <span className="flex items-start gap-1">
+              <span title={`${CORE_NAMES[piece.core]} 코어 · ${CORE_ATTRIBUTES[piece.core].label}`}>
+                <CoreIcon kind={piece.core} className="h-4 w-4" />
+              </span>
+              <span
+                className={`line-clamp-2 text-xs font-semibold leading-tight ${exotic ? "text-red-400" : named ? "text-amber-700" : "text-gray-900"}`}
+              >
+                {gearPieceName(piece)}
+              </span>
             </span>
             {named && <span className="truncate text-[10px] text-gray-400">{named.brand}</span>}
             <span className="mt-0.5 flex flex-col text-[11px] leading-snug">

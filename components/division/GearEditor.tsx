@@ -13,13 +13,14 @@ import {
   type StatEffect,
 } from "@/data/division-gear";
 import { EXOTIC_GEAR, findExoticGear } from "@/data/division-exotic-gear";
-import { NAMED_ITEMS } from "@/data/division-named";
+import { NAMED_ITEMS, type NamedItem } from "@/data/division-named";
 import {
   applyExoticFixed,
   emptyGearPiece,
   findNamed,
   formatStat,
   minorSlotCount,
+  namedAttrLabel,
   namedBrand,
   PROTO_MULTIPLIER,
   type GearPiece,
@@ -110,6 +111,11 @@ export function GearEditor({
     };
   };
 
+  const namedProto = (item: NamedItem): Step["proto"] => {
+    const base = protoFor("named", undefined);
+    return base && { ...base, label: namedAttrLabel(item, PROTO_MULTIPLIER) };
+  };
+
   const steps: Step[] = [];
   if (piece) {
     steps.push({
@@ -138,6 +144,8 @@ export function GearEditor({
         label: named!.kind === "attr" ? named!.desc : named!.effectName ?? named!.name,
         desc: named!.kind === "talent" ? named!.desc : undefined,
       },
+      // 네임드 고유 속성도 프로토타입이면 1.5배
+      proto: named!.kind === "attr" ? namedProto(named!) : undefined,
     });
     if (named && !namedTakesTalent) steps.push(lockedStep("속성 1"));
     const minorOffset = named && !namedTakesTalent ? 1 : 0;

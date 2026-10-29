@@ -41,7 +41,7 @@ export interface GearPiece {
   mod: string | null;
   /** 브랜드 조끼·배낭 탤런트. 기어세트 조끼·배낭은 세트 탤런트가 자동으로 붙는다 */
   talent: string | null;
-  /** 프로토타입 속성 key ("core", "minor-0", "minor-1", "mod"). 수치가 1.5배가 된다 */
+  /** 프로토타입 속성 key ("core", "named", "minor-0", "minor-1", "mod"). 수치가 1.5배가 된다 */
   proto?: string[];
 }
 
@@ -50,6 +50,18 @@ export const PROTO_MULTIPLIER = 1.5;
 
 export function protoMultiplier(piece: GearPiece, key: string): number {
   return piece.proto?.includes(key) ? PROTO_MULTIPLIER : 1;
+}
+
+/** 보너스의 스탯 수치를 배율만큼 키운다 (네임드 고유 속성 프로토타입용) */
+export function scaleBonus(bonus: Bonus, mult: number): Bonus {
+  if (mult === 1) return bonus;
+  return { ...bonus, stats: bonus.stats?.map((e) => ({ ...e, value: e.value * mult })) };
+}
+
+/** 네임드 고유 속성 표시 문구. 프로토타입이면 1.5배 수치로 다시 쓴다 */
+export function namedAttrLabel(item: NamedItem, mult: number): string {
+  if (mult === 1 || !item.bonus.stats?.length) return item.desc;
+  return item.bonus.stats.map((e) => formatStat(e.stat, e.value * mult)).join(", ");
 }
 
 export interface WeaponBuild {
@@ -298,8 +310,10 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
       const named = findNamed(piece.id);
       if (!named) continue;
       const title = named.kind === "attr" ? `네임드 ${named.name}` : `네임드 ${named.name}: ${named.effectName}`;
-      if (named.kind === "attr" || conditional) applyBonus(named.bonus, title);
-      active.push({ title, detail: named.desc, conditional: named.kind === "talent" });
+      // 고유 속성은 프로토타입이면 1.5배
+      const mult = named.kind === "attr" ? protoMultiplier(piece, "named") : 1;
+      if (named.kind === "attr" || conditional) applyBonus(scaleBonus(named.bonus, mult), title);
+      active.push({ title, detail: named.kind === "attr" ? namedAttrLabel(named, mult) : named.desc, conditional: named.kind === "talent" });
       const brand = namedBrand(named);
       if (brand) brandCount.set(brand.id, (brandCount.get(brand.id) ?? 0) + 1);
       continue;

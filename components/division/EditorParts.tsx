@@ -151,10 +151,15 @@ export function StepList({ steps, initialChosen, resetKey }: { steps: Step[]; in
                   {index + 1}
                 </span>
                 <span className="shrink-0 text-xs font-medium text-amber-700">{step.title}</span>
-                <span className="ml-auto truncate text-sm font-medium text-amber-800">{step.locked.label}</span>
+                <span
+                  className={`ml-auto truncate text-sm font-medium ${step.proto?.on ? "font-semibold text-purple-400" : "text-amber-800"}`}
+                >
+                  {(step.proto?.on && step.proto.label) || step.locked.label}
+                </span>
                 <span className="shrink-0 text-xs" title="고유 효과라 바꿀 수 없어요" aria-label="고정">
                   🔒
                 </span>
+                {step.proto && <ProtoButton proto={step.proto} />}
               </div>
               {step.locked.desc && (
                 <p className="border-t border-amber-200 px-3 py-2 text-xs text-amber-800">{step.locked.desc}</p>
@@ -188,21 +193,7 @@ export function StepList({ steps, initialChosen, resetKey }: { steps: Step[]; in
                 </span>
               </button>
               {/* 프로토타입 토글: 켜면 이 속성 수치가 1.5배가 된다 */}
-              {step.proto && (
-                <button
-                  type="button"
-                  onClick={step.proto.toggle}
-                  aria-pressed={step.proto.on}
-                  title="프로토타입 속성 (수치 1.5배)"
-                  className={`shrink-0 rounded-md border px-1.5 py-1 text-[10px] font-semibold transition-colors ${
-                    step.proto.on
-                      ? "border-purple-500 bg-purple-500 text-white"
-                      : "border-gray-200 text-gray-400 hover:border-purple-400 hover:text-purple-400"
-                  }`}
-                >
-                  프로토
-                </button>
-              )}
+              {step.proto && <ProtoButton proto={step.proto} />}
             </div>
             {isOpen && (
               <div className="grid grid-cols-1 gap-1.5 border-t p-2 sm:grid-cols-2">
@@ -232,5 +223,24 @@ export function StepList({ steps, initialChosen, resetKey }: { steps: Step[]; in
         );
       })}
     </ol>
+  );
+}
+
+/** 프로토타입 토글 버튼. 켜면 그 속성 수치가 1.5배가 된다 */
+function ProtoButton({ proto }: { proto: NonNullable<Step["proto"]> }) {
+  return (
+    <button
+      type="button"
+      onClick={proto.toggle}
+      aria-pressed={proto.on}
+      title="프로토타입 속성 (수치 1.5배)"
+      className={`shrink-0 rounded-md border px-1.5 py-1 text-[10px] font-semibold transition-colors ${
+        proto.on
+          ? "border-purple-500 bg-purple-500 text-white"
+          : "border-gray-200 text-gray-400 hover:border-purple-400 hover:text-purple-400"
+      }`}
+    >
+      프로토
+    </button>
   );
 }

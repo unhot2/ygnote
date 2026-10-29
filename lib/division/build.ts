@@ -245,6 +245,8 @@ export interface DamageResult {
   sustainedDps: number;
   magDamage: number;
   magTime: number;
+  /** 탄창 용량 보너스를 반영한 탄창 */
+  mag: number;
 }
 
 function describeBonus(bonus: Bonus): string {
@@ -371,6 +373,7 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
       const hasChest = build.gear.chest?.source === "set" && build.gear.chest.id === setId;
       const hasBackpack = build.gear.backpack?.source === "set" && build.gear.backpack.id === setId;
       const scaledAmp = set.ampScaling?.(hasChest, hasBackpack);
+      const scaledStats = set.scaledStats?.(hasChest, hasBackpack) ?? [];
       const parts = [
         { title: `${set.name} 4피스: ${set.fourPiece.name}`, short: `4피스 ${set.fourPiece.name}`, bonus: set.fourPiece.bonus, on: true },
         { title: `조끼 탤런트: ${set.chest.name}`, short: `조끼 ${set.chest.name}`, bonus: set.chest.bonus, on: hasChest },
@@ -379,15 +382,17 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
       for (const [i, part] of parts.entries()) {
         if (!part.on) continue;
         if (conditional) applyBonus(part.bonus, part.title);
-        // 중첩형 증폭은 조끼·배낭까지 반영한 최종값을 4피스 줄에 보여준다
-        const detail =
-          i === 0 && scaledAmp !== undefined
-            ? `증폭 피해 +${+scaledAmp.toFixed(1)}%, ${describeBonus(part.bonus)}`
-            : describeBonus(part.bonus);
+        // 중첩형 증폭·스탯은 조끼·배낭까지 반영한 최종값을 4피스 줄에 보여준다
+        const scaledText = [
+          ...(scaledAmp !== undefined ? [`증폭 피해 +${+scaledAmp.toFixed(1)}%`] : []),
+          ...scaledStats.map((e) => formatStat(e.stat, e.value)),
+        ];
+        const detail = i === 0 && scaledText.length ? `${scaledText.join(", ")}, ${describeBonus(part.bonus)}` : describeBonus(part.bonus);
         active.push({ title: part.title, detail, conditional: true, set: true });
         progress.bonuses.push({ title: part.short, detail, conditional: true, set: true });
       }
       if (conditional && scaledAmp !== undefined) amps.push({ label: set.fourPiece.name, value: +scaledAmp.toFixed(1) });
+      if (conditional) scaledStats.forEach((e) => add(e.stat, e.value, `${set.name} 4피스`));
     }
   }
 
@@ -529,8 +534,10 @@ function computeDamage(build: Build, stats: Record<StatKey, number>, amps: AmpEf
   const rpm = weapon.rpm * (1 + stats.rof / 100);
   const reload = weapon.reload / (1 + stats.reload / 100);
   const shotsPerSec = rpm / 60;
-  const magTime = shotsPerSec > 0 ? weapon.mag / shotsPerSec : 0;
-  const magDamage = expected * weapon.mag;
+  // 탄창 용량 보너스(진정한 애국자·거장 등)는 기본 탄창에 비율로 붙는다
+  const mag = Math.round(weapon.mag * (1 + stats.magSize / 100));
+  const magTime = shotsPerSec > 0 ? mag / shotsPerSec : 0;
+  const magDamage = expected * mag;
 
   return {
     buckets,
@@ -545,5 +552,6 @@ function computeDamage(build: Build, stats: Record<StatKey, number>, amps: AmpEf
     sustainedDps: magTime + reload > 0 ? magDamage / (magTime + reload) : 0,
     magDamage,
     magTime,
+    mag,
   };
 }

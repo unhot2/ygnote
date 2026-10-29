@@ -40,7 +40,7 @@ export function LoadoutPanel({
   const keyStats: [string, string][] = [
     ["무기 DMG", formatShort(damage.body)],
     ["RPM", String(Math.round(damage.rpm))],
-    ["MAG", String(build.weapon.mag)],
+    ["MAG", String(damage.mag)],
     ["방어도", formatShort(result.totalArmor)],
     ["스킬 등급", String(result.stats.skillTier)],
   ];

@@ -5,9 +5,11 @@ import { BuildBar } from "@/components/division/BuildBar";
 import { CatalogPanel } from "@/components/division/CatalogPanel";
 import { GearEditor } from "@/components/division/GearEditor";
 import { LoadoutPanel } from "@/components/division/LoadoutPanel";
+import { PresetPanel } from "@/components/division/PresetPanel";
 import { ResultsPanel, type ResultTab } from "@/components/division/ResultPanel";
 import { WeaponEditor } from "@/components/division/WeaponEditor";
 import { GEAR_SLOTS, type GearSlotId } from "@/data/division-gear";
+import type { BuildPreset } from "@/data/division-presets";
 import { findWeapon } from "@/data/division-weapons";
 import {
   computeBuild,
@@ -105,6 +107,15 @@ export function DivisionPageClient() {
 
   const reset = () => {
     if (window.confirm("장비와 무기 설정을 모두 초기화할까요?")) replace(createEmptyBuild());
+  };
+
+  /** 추천 장비를 누르면 지금 빌드를 그 세팅으로 바꾸고 위로 올라가 장비 칸을 보여준다 */
+  const applyPreset = (preset: BuildPreset, next: Build) => {
+    const hasGear = GEAR_SLOTS.some((slot) => build.gear[slot.id]);
+    if (hasGear && !window.confirm(`지금 빌드를 "${preset.name}" 세팅으로 바꿀까요? 저장하지 않은 빌드는 사라져요.`)) return;
+    replace(next, preset.name);
+    setMobileView("loadout");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const updateSaved = (list: SavedBuild[]) => {
@@ -215,7 +226,7 @@ export function DivisionPageClient() {
             chcRaw={result.chcRaw}
           />
 
-          <div className="mx-auto grid w-full max-w-6xl flex-1 items-start gap-4 p-4 pb-24 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:pb-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+          <div className="mx-auto grid w-full max-w-6xl flex-1 items-start gap-4 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
             <section className={mobileView === "loadout" ? "" : "hidden md:block"}>
               <LoadoutPanel
                 build={build}
@@ -242,6 +253,10 @@ export function DivisionPageClient() {
                 값과 다를 수 있어요.
               </p>
             </section>
+          </div>
+
+          <div className="mx-auto w-full max-w-6xl px-4 pb-24 md:pb-4">
+            <PresetPanel onApply={applyPreset} />
           </div>
 
           {/* 휴대폰: 하단 탭으로 장비 / 결과 / 세트를 오간다 */}

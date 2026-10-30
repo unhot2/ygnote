@@ -27,6 +27,7 @@ import {
   WEAPON_TALENTS,
   WEAPON_TYPE_CORE,
   type WeaponClassId,
+  type WeaponItem,
 } from "@/data/division-weapons";
 
 export interface GearPiece {
@@ -86,10 +87,73 @@ export interface Conditions {
   shd: boolean;
 }
 
+/** 인게임처럼 주무기 2정 + 권총 1정 */
+export type WeaponSlotId = "primary" | "secondary" | "sidearm";
+
+export const WEAPON_SLOTS: { id: WeaponSlotId; label: string }[] = [
+  { id: "primary", label: "주무기" },
+  { id: "secondary", label: "보조 무기" },
+  { id: "sidearm", label: "권총" },
+];
+
 export interface Build {
   gear: Record<GearSlotId, GearPiece | null>;
-  weapon: WeaponBuild;
+  weapons: Record<WeaponSlotId, WeaponBuild>;
+  /** DPS를 계산하는 기준 무기 */
+  activeWeapon: WeaponSlotId;
   conditions: Conditions;
+}
+
+/** 지금 DPS 계산에 쓰는 무기 */
+export function activeWeaponOf(build: Build): WeaponBuild {
+  return build.weapons[build.activeWeapon];
+}
+
+/** 권총 칸에 들어가는 무기 (권총과 더블 배럴 소드 오프 계열) */
+export function isSidearm(item: WeaponItem): boolean {
+  return item.cls === "pistol" || item.id === "sawed-off" || item.base === "더블 배럴 소드 오프";
+}
+
+/** 무기 칸에 끼울 수 있는 무기 목록 */
+export function weaponsForSlot(slot: WeaponSlotId): WeaponItem[] {
+  return WEAPON_ITEMS.filter((w) => (slot === "sidearm" ? isSidearm(w) : !isSidearm(w)));
+}
+
+const DEFAULT_WEAPON: Record<WeaponSlotId, string> = { primary: "p416", secondary: "police-m4", sidearm: "m45a1" };
+
+/**
+ * 무기 한 칸을 바꾼다. 특급 무기는 한 번에 하나만 쓸 수 있어,
+ * 특급을 끼우면 다른 칸의 특급 무기는 그 칸의 기본 무기로 돌아간다.
+ */
+export function equipWeapon(
+  weapons: Build["weapons"],
+  slot: WeaponSlotId,
+  weapon: WeaponBuild,
+): Build["weapons"] {
+  const next = { ...weapons, [slot]: weapon };
+  if (findWeapon(weapon.weaponId)?.kind === "exotic") {
+    for (const { id } of WEAPON_SLOTS) {
+      if (id !== slot && findWeapon(next[id].weaponId)?.kind === "exotic") next[id] = weaponBuildFrom(DEFAULT_WEAPON[id]);
+    }
+  }
+  return next;
+}
+
+/**
+ * 저장된 빌드(예전 형식 포함)를 지금 형식으로 맞춘다.
+ * 무기가 1칸이던 예전 빌드는 그 무기를 주무기로 옮긴다.
+ */
+export function normalizeBuild(raw: unknown): Build | null {
+  if (!raw || typeof raw !== "object") return null;
+  const data = raw as Partial<Build> & { weapon?: WeaponBuild };
+  const empty = createEmptyBuild();
+  const weapons = data.weapons ?? (data.weapon ? { ...empty.weapons, primary: data.weapon } : empty.weapons);
+  return {
+    gear: { ...empty.gear, ...data.gear },
+    weapons,
+    activeWeapon: data.activeWeapon ?? "primary",
+    conditions: { ...empty.conditions, ...data.conditions },
+  };
 }
 
 export function findNamed(id: string): NamedItem | undefined {
@@ -152,7 +216,12 @@ export function weaponBuildFrom(weaponId: string): WeaponBuild {
 export function createEmptyBuild(): Build {
   return {
     gear: { mask: null, chest: null, backpack: null, gloves: null, holster: null, kneepads: null },
-    weapon: weaponBuildFrom("p416"),
+    weapons: {
+      primary: weaponBuildFrom(DEFAULT_WEAPON.primary),
+      secondary: weaponBuildFrom(DEFAULT_WEAPON.secondary),
+      sidearm: weaponBuildFrom(DEFAULT_WEAPON.sidearm),
+    },
+    activeWeapon: "primary",
     conditions: { hsRate: 20, target: "armor", outOfCover: true, conditional: true, shd: true },
   };
 }
@@ -407,7 +476,7 @@ export function computeBuild(build: Build, extra: StatEffect[] = []): BuildResul
   }
 
   // 5. 무기: 핵심 속성 2개(무기군 대미지 + 무기군 고유), 속성, 모드, 탤런트, 네임드·특급 고유 효과
-  const { weapon } = build;
+  const weapon = activeWeaponOf(build);
   const weaponItem = findWeapon(weapon.weaponId);
   const weaponKind = weaponItem?.kind ?? "normal";
   const weaponClass = WEAPON_CLASSES[weapon.cls];
@@ -487,11 +556,12 @@ export function redAttributeGains(build: Build): { label: string; gain: number }
 /**
  * 디비전2 피해 공식 (커뮤니티 정리 기준 근사):
  * 기본 피해 × (1 + 무기 피해 + 무기 종류 피해) × (1 + 방어도/체력 피해) × (1 + 엄폐 밖 피해)
- *          × (1 + 치명타 피해) × (1 + 헤드샷 피해) × Π(1 + 증폭 피해)
- * 같은 버킷 안은 더하고, 버킷끼리는 곱한다.
+ *          × (1 + 치명타 피해 + 헤드샷 피해) × Π(1 + 증폭 피해)
+ * 같은 버킷 안은 더하고, 버킷끼리는 곱한다. 치명타 피해와 헤드샷 피해는 한 버킷이라 헤드샷 치명타는 둘을 더한다.
  */
 function computeDamage(build: Build, stats: Record<StatKey, number>, amps: AmpEffect[]): DamageResult {
-  const { weapon, conditions } = build;
+  const { conditions } = build;
+  const weapon = activeWeaponOf(build);
   const weaponClass = WEAPON_CLASSES[weapon.cls];
   const typeDmg = stats[weaponClass.typeDmgStat];
   const chc = Math.min(stats.chc, CHC_CAP) / 100;
@@ -527,9 +597,9 @@ function computeDamage(build: Build, stats: Record<StatKey, number>, amps: AmpEf
   const body = weapon.damage * buckets.reduce((acc, b) => acc * b.multiplier, 1);
   const crit = body * (1 + chd);
   const headshot = body * (1 + hsd);
-  const headshotCrit = headshot * (1 + chd);
-  // 치명타·헤드샷은 서로 독립인 확률로 보고 기대값을 낸다
-  const expected = body * (1 + chc * chd) * (1 + hsRate * hsd);
+  const headshotCrit = body * (1 + chd + hsd);
+  // 치명타·헤드샷은 서로 독립인 확률이고 보너스는 더하므로, 기대 배율은 1 + 치확×치피 + 헤드샷 비율×헤드샷 피해
+  const expected = body * (1 + chc * chd + hsRate * hsd);
 
   const rpm = weapon.rpm * (1 + stats.rof / 100);
   const reload = weapon.reload / (1 + stats.reload / 100);

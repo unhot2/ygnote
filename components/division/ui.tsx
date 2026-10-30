@@ -74,3 +74,10 @@ export function Toggle({
 export function formatNumber(value: number): string {
   return Math.round(value).toLocaleString("ko-KR");
 }
+
+/** 큰 수를 1.2M, 304.6k처럼 줄여 쓴다 */
+export function formatShort(value: number): string {
+  if (value >= 1_000_000) return `${+(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${+(value / 1_000).toFixed(1)}k`;
+  return formatNumber(value);
+}

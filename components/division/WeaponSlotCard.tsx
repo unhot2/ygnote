@@ -2,7 +2,7 @@
 
 import { findWeapon, WEAPON_ATTRIBUTES, WEAPON_CLASSES, WEAPON_TALENTS } from "@/data/division-weapons";
 import { formatStat, type WeaponBuild } from "@/lib/division/build";
-import { formatNumber } from "./ui";
+import { formatShort } from "./ui";
 import { WEAPON_KIND_BADGE, WeaponImage } from "./WeaponTile";
 
 // 인게임 등급색: 일반 노랑, 네임드 주황, 특급 빨강 (왼쪽 띠와 옅어지는 배경)
@@ -12,8 +12,23 @@ const KIND_STYLE = {
   exotic: { stripe: "bg-red-500", tint: "from-red-500/35" },
 } as const;
 
-/** 무기 칸 타일 (인게임 장비창 맨 위 무기 줄). 누르면 무기 편집 시트를 연다 */
-export function WeaponSlotCard({ weapon, onClick }: { weapon: WeaponBuild; onClick: () => void }) {
+/**
+ * 무기 칸 타일 (주무기·보조 무기·권총). 누르면 무기 편집 시트를 연다.
+ * active인 칸이 DPS 계산 기준이고, 다른 칸은 "기준" 버튼으로 바꾼다.
+ */
+export function WeaponSlotCard({
+  label,
+  weapon,
+  active,
+  onClick,
+  onActivate,
+}: {
+  label: string;
+  weapon: WeaponBuild;
+  active: boolean;
+  onClick: () => void;
+  onActivate: () => void;
+}) {
   const item = findWeapon(weapon.weaponId);
   const kind = item?.kind ?? "normal";
   const attr =
@@ -25,31 +40,34 @@ export function WeaponSlotCard({ weapon, onClick }: { weapon: WeaponBuild; onCli
   const talent = item?.fixedTalent?.name ?? WEAPON_TALENTS.find((t) => t.id === weapon.talent)?.name ?? null;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`col-span-2 flex overflow-hidden rounded-lg border border-gray-200 bg-[#1a2438] bg-linear-to-r ${KIND_STYLE[kind].tint} to-transparent text-left transition-colors hover:border-orange-400`}
+    <div
+      className={`relative flex overflow-hidden rounded-lg border bg-[#1a2438] bg-linear-to-r ${KIND_STYLE[kind].tint} to-transparent ${
+        active ? "border-orange-500" : "border-gray-200"
+      }`}
     >
-      <span className={`w-1.5 shrink-0 ${KIND_STYLE[kind].stripe}`} aria-hidden />
-      <span className="flex min-w-0 flex-1 items-center gap-2.5 p-2">
-        <WeaponImage weaponId={weapon.weaponId} cls={weapon.cls} kind={kind} width={320} className="h-16 w-32 sm:w-40" />
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex items-center gap-1.5">
-            <span className={`truncate text-sm font-semibold ${WEAPON_KIND_BADGE[kind].text}`}>{item?.name ?? weapon.weaponId}</span>
-            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${WEAPON_KIND_BADGE[kind].className}`}>
-              {WEAPON_KIND_BADGE[kind].label}
-            </span>
-          </span>
-          <span className="truncate text-[11px] text-gray-400">
-            {[WEAPON_CLASSES[weapon.cls].label, item?.base && `기반 ${item.base}`].filter(Boolean).join(" · ")}
-          </span>
-          <span className="truncate text-[11px] text-gray-500">
-            {formatNumber(weapon.damage)} · {weapon.rpm} RPM · {weapon.mag}발
-            {attr && <span className={item?.perfectAttr ? "text-amber-700" : ""}> · {attr}</span>}
-          </span>
-          {talent && <span className="truncate text-[11px] font-medium text-orange-600">★ {talent}</span>}
+      <span className={`w-1 shrink-0 ${KIND_STYLE[kind].stripe}`} aria-hidden />
+      <button type="button" onClick={onClick} className="flex min-w-0 flex-1 flex-col gap-1 p-2 text-left transition-colors hover:bg-white/5">
+        <span className="pr-10 text-[10px] font-medium text-gray-400">{label}</span>
+        <WeaponImage weaponId={weapon.weaponId} cls={weapon.cls} kind={kind} width={240} className="h-10 w-full" />
+        <span className={`truncate text-xs font-semibold ${WEAPON_KIND_BADGE[kind].text}`}>{item?.name ?? weapon.weaponId}</span>
+        <span className="truncate text-[10px] text-gray-400">
+          {WEAPON_CLASSES[weapon.cls].label} · {formatShort(weapon.damage)} · {weapon.rpm}RPM
         </span>
-      </span>
-    </button>
+        {attr && <span className={`truncate text-[10px] ${item?.perfectAttr ? "text-amber-700" : "text-gray-500"}`}>{attr}</span>}
+        {talent && <span className="truncate text-[10px] font-medium text-orange-600">★ {talent}</span>}
+      </button>
+      {/* DPS 계산 기준 무기 표시·전환 */}
+      <button
+        type="button"
+        onClick={onActivate}
+        aria-pressed={active}
+        title={active ? "지금 DPS 계산 기준 무기예요" : "이 무기로 DPS 계산"}
+        className={`absolute right-1.5 top-1.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+          active ? "bg-orange-500 text-white" : "border border-gray-200 text-gray-400 hover:border-orange-400 hover:text-orange-600"
+        }`}
+      >
+        {active ? "● 기준" : "기준"}
+      </button>
+    </div>
   );
 }

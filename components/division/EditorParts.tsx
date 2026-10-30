@@ -244,3 +244,61 @@ function ProtoButton({ proto }: { proto: NonNullable<Step["proto"]> }) {
     </button>
   );
 }
+
+/**
+ * 장비·무기 선택 목록 위의 도구 줄: 이름 검색, 필터 칩, DPS순 정렬.
+ * DPS순을 켜면 목록을 "끼웠을 때 지속 DPS가 많이 오르는 순"으로 정렬한다.
+ */
+export function PickerToolbar({
+  query,
+  onQuery,
+  filters = [],
+  activeFilters = [],
+  onToggleFilter,
+  sortByDps,
+  onToggleSort,
+}: {
+  query: string;
+  onQuery: (q: string) => void;
+  filters?: { id: string; label: string }[];
+  activeFilters?: string[];
+  onToggleFilter?: (id: string) => void;
+  sortByDps: boolean;
+  onToggleSort: () => void;
+}) {
+  const chip = (active: boolean) =>
+    `rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+      active ? "border-orange-500 text-orange-600" : "border-gray-200 text-gray-500 hover:border-orange-400"
+    }`;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 border-b px-3 py-2">
+      <input
+        value={query}
+        onChange={(e) => onQuery(e.target.value)}
+        placeholder="이름·효과 검색"
+        aria-label="검색"
+        className="h-7 min-w-0 flex-1 rounded-md border border-gray-200 bg-gray-50 px-2 text-xs text-gray-900 focus:border-orange-500 focus:outline-none sm:max-w-48"
+      />
+      {filters.map((f) => (
+        <button key={f.id} type="button" onClick={() => onToggleFilter?.(f.id)} aria-pressed={activeFilters.includes(f.id)} className={chip(activeFilters.includes(f.id))}>
+          {f.label}
+        </button>
+      ))}
+      <button type="button" onClick={onToggleSort} aria-pressed={sortByDps} className={chip(sortByDps)}>
+        DPS순
+      </button>
+    </div>
+  );
+}
+
+/** 끼웠을 때 지속 DPS 변화(%) */
+export function DeltaText({ delta }: { delta: number | null }) {
+  if (delta === null) return null;
+  if (Math.abs(delta) < 0.05) return <span className="text-[10px] tabular-nums text-gray-400">±0%</span>;
+  return (
+    <span className={`text-[10px] font-semibold tabular-nums ${delta > 0 ? "text-emerald-400" : "text-red-400"}`}>
+      {delta > 0 ? "+" : ""}
+      {delta.toFixed(1)}%
+    </span>
+  );
+}

@@ -236,7 +236,7 @@ export const GEAR_SET_IMAGES: Record<string, { banner: string }> = {
   "system-corruption": { banner: "a/a3/System_Corruption.png" },
   "eclipse-protocol": { banner: "0/06/Eclipse_Protocol.png" },
   "future-initiative": { banner: "5/54/Future_Initiative.png" },
-  rigger: { banner: "6/62/Rigger.png" },
+  rigger: { banner: "8/83/Rigger_GS.png" },
   "umbra-initiative": { banner: "6/6f/Umbra_Initiative.png" },
   hotshot: { banner: "7/70/Hotshot.png" },
   cavalier: { banner: "7/74/Cavalier.png" },
@@ -251,6 +251,29 @@ export const GEAR_SET_IMAGES: Record<string, { banner: string }> = {
   "core-strength": { banner: "2/28/Core_Strength.png" },
   "ortiz-reficere": { banner: "5/58/Ortiz_Reficere.png" },
   "ember-engine": { banner: "d/d9/Ember_Engine.png" },
+};
+
+/**
+ * 세트 효과 데이터가 없어 BRANDS에 없는 브랜드(네임드 장비만 쓰는 브랜드)의 배너. 키는 한글 브랜드 이름.
+ * 기어세트 배너와 같은 525×153 틀이라 같은 방식으로 왼쪽 엠블럼만 잘라 쓴다.
+ */
+export const EXTRA_BRAND_BANNERS: Record<string, string> = {
+  "레가투스 S.p.A.": "0/04/Legatus_S.p.A..png",
+  "벨스톤 무기고": "d/d3/Belstone.png",
+  "엠프리스 인터내셔널": "1/12/Empress.png",
+  "우지나 게티카": "c/c9/Uzina.png",
+  "합스부르크 가드": "c/ca/Habsburg_Guard.png",
+  "전격": "d/d7/Electrique.png",
+  "렝모": "7/74/Lengmo.png",
+  "팰리세이드 제강소": "8/82/Palisade_Steelworks.png",
+  "즈비아도프카 Sp. z o.o.": "5/5a/Zwiadowka.png",
+  "도시 감시병": "b/b1/Urban_Lookout.png",
+  "유닛 합금": "f/f1/Unit_Alloys.png",
+  "로열 워크스": "2/22/Royal_Works.png",
+  "에델바이스 GPz": "4/45/Edelweiss_GPz.png",
+  "이미넌스 군수산업": "6/6e/Imminence_Armaments.png",
+  "브라조스 데 아쿼버스": "8/81/Brazos_de_Arcabuz.png",
+  "샤이니 멍키 보호장구": "a/a2/Shiny_Monkey_Gear.png",
 };
 
 export function wikiImage(path: string, width: number): string {
@@ -575,13 +598,13 @@ export const GEAR_SETS: GearSet[] = [
     en: "Tipping Scales",
     twoPiece: s("magSize", 30),
     threePiece: s("lmgDmg", 30),
-    fourPiece: { name: "출력 제어", bonus: { note: "사격 시 중첩당 무기 조작력 +0.5%, 치명타 대미지 +5%, 최대 50중첩 (최대 중첩 가정)" } },
+    fourPiece: { name: "출력 제어", bonus: { note: "사격 시 중첩당 무기 조작력 +0.5%, 치명타 대미지 +4%, 최대 50중첩 (최대 중첩 가정)" } },
     chest: { name: "지속성", bonus: { note: "최대 중첩 50 → 75" } },
-    backpack: { name: "눈덩이", bonus: { note: "중첩당 치명타 대미지 5% → 8%" } },
+    backpack: { name: "눈덩이", bonus: { note: "중첩당 치명타 대미지 4% → 7%" } },
     scaledStats: (hasChest, hasBackpack) => {
       const stacks = hasChest ? 75 : 50;
       return [
-        { stat: "chd", value: stacks * (hasBackpack ? 8 : 5) },
+        { stat: "chd", value: stacks * (hasBackpack ? 7 : 4) },
         { stat: "wh", value: stacks * 0.5 },
       ];
     },

@@ -44,7 +44,7 @@ export function WeaponImage({
 }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const path = weaponImageById(weaponId);
-  const src = path ? wikiImage(path, width) : null;
+  const src = path ? (path.startsWith("/") ? path : wikiImage(path, width)) : null;
 
   if (!src || failedSrc === src) return <WeaponTile cls={cls} kind={kind} className={className} />;
   return (

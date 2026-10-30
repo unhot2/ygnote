@@ -1,6 +1,7 @@
 /**
  * 무기 이미지. 디비전 팬덤 위키(thedivision.fandom.com)에 올라온 파일을 그대로 링크한다 (2026-10 확인).
  * 값은 static.wikia.nocookie.net/thedivision/images/ 뒤 경로이고 wikiImage()로 주소를 만든다.
+ * "/"로 시작하는 값은 직접 잘라 public/에 둔 로컬 이미지다.
  * 이미지가 없는 네임드·특급 무기는 weaponImagePath()가 기반 무기 이미지로 대신한다.
  */
 import { findWeapon, WEAPON_ITEMS, type WeaponItem } from "./division-weapons";
@@ -176,6 +177,23 @@ export const WEAPON_IMAGES: Record<string, string> = {
   bittersweet: "7/70/TCTD2_Seasonal_Gear_BITTERSWEET_ExoticRifle.png",
   "busy-little-bee": "f/f6/Busy_little_bee.jpg",
   mosquito: "0/0a/Mosquito_Exotic.png",
+  // 기반 일반 무기 렌더가 위키에 없어 같은 총을 쓰는 네임드 이미지로 대신한다
+  gr9: "c/c6/Dare.png",
+  negev: "4/4f/Carnage.png",
+  tac308: "2/2c/Scalpel.png",
+  "vector-tac": "e/e2/Froth.png",
+  mk20: "6/6d/SOCOM_Mk12_SSR_TD2.png",
+  "m9-officer": "2/26/Officers_M9A1_Div2.png",
+  kard45: "9/99/KARD.png",
+  brutus: "b/b7/Brutus-500x500.png",
+  bighorn: "5/50/TheBighorn.png",
+  "sweet-dreams": "d/d1/Sweet_dreams_Div2.png",
+  "the-ravenous": "a/a5/Ravenous.png",
+  liberty: "5/54/Liberty.png",
+  // 위키에 렌더가 없어 홍보 이미지(팬덤 위키·나무위키)에서 무기 부분만 잘라 public/에 둔 이미지
+  vertigo: "/division/weapons/vertigo.webp",
+  "prima-donna": "/division/weapons/prima-donna.webp",
+  "bullet-king": "/division/weapons/bullet-king.webp",
 };
 
 /** 무기 이미지 경로. 없으면 같은 이름의 기반 일반 무기 이미지를 쓴다 */

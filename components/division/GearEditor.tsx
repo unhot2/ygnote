@@ -9,8 +9,10 @@ import {
   GEAR_TALENTS,
   MINOR_ATTRIBUTES,
   type CoreId,
+  type Bonus,
   type GearSlotId,
   type StatEffect,
+  type StatKey,
 } from "@/data/division-gear";
 import { EXOTIC_GEAR, findExoticGear } from "@/data/division-exotic-gear";
 import { NAMED_ITEMS, type NamedItem } from "@/data/division-named";
@@ -25,7 +27,17 @@ import {
   PROTO_MULTIPLIER,
   type GearPiece,
 } from "@/lib/division/build";
-import { describeStats, EditorSheet, KindTabs, NONE, StepList, type Step, type StepOption } from "./EditorParts";
+import {
+  DeltaText,
+  describeStats,
+  EditorSheet,
+  KindTabs,
+  NONE,
+  PickerToolbar,
+  StepList,
+  type Step,
+  type StepOption,
+} from "./EditorParts";
 import { GearLogo } from "./GearLogo";
 import { ExoticGearImage } from "./ExoticGearImage";
 import { minorLabel } from "./GearSlotCard";
@@ -55,6 +67,8 @@ export function GearEditor({
   otherExotic,
   onChange,
   onClose,
+  previewDps,
+  equippedSetIds,
 }: {
   slotId: GearSlotId;
   piece: GearPiece | null;
@@ -62,8 +76,15 @@ export function GearEditor({
   otherExotic?: { slotLabel: string; name: string };
   onChange: (piece: GearPiece | null) => void;
   onClose: () => void;
+  /** 이 칸에 그 장비를 끼웠을 때의 지속 DPS */
+  previewDps: (piece: GearPiece | null) => number;
+  /** 다른 칸에 이미 낀 브랜드·기어세트 id ("세트 완성" 필터용) */
+  equippedSetIds: string[];
 }) {
   const slot = GEAR_SLOTS.find((s) => s.id === slotId)!;
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState<string[]>([]);
+  const [sortByDps, setSortByDps] = useState(false);
   // 편집 창을 열 때 다른 칸에 있던 특급. 이 칸에 특급을 끼우면 바로 빠지므로 처음 값을 기억해 안내한다
   const [replacedExotic] = useState(otherExotic);
 
@@ -81,13 +102,33 @@ export function GearEditor({
   const update = (patch: Partial<GearPiece>) => piece && onChange({ ...piece, ...patch });
 
   // 장비를 바꾸면 부가 속성 칸 수가 달라질 수 있어 고른 값은 살리고 길이만 맞춘다
-  const selectItem = (id: string) => {
-    if (!piece) return;
-    const count = minorSlotCount(piece.source, id);
-    const minors = Array.from({ length: count }, (_, i) => piece.minors[i] ?? null);
+  const candidate = (base: GearPiece, id: string): GearPiece => {
+    const count = minorSlotCount(base.source, id);
+    const minors = Array.from({ length: count }, (_, i) => base.minors[i] ?? null);
     // 특급은 고정 코어·속성을 채워 넣는다
-    onChange(applyExoticFixed({ ...piece, id, minors, talent: null }));
+    return applyExoticFixed({ ...base, id, minors, talent: null });
   };
+  const selectItem = (id: string) => piece && onChange(candidate(piece, id));
+
+  // 목록: 검색어·필터로 거르고, 지금 장비 대비 지속 DPS 변화(%)를 붙인다
+  const baseDps = previewDps(piece);
+  const q = query.trim().toLowerCase();
+  const listed = piece
+    ? listFor(piece.source)
+        .map((item) => {
+          const info = itemInfo(piece.source, item.id);
+          const dps = previewDps(candidate(piece, item.id));
+          return { item, info, delta: baseDps > 0 ? (dps / baseDps - 1) * 100 : null };
+        })
+        .filter(
+          ({ item, info }) =>
+            (!q || `${item.name} ${item.en} ${info.text}`.toLowerCase().includes(q)) &&
+            (!filters.includes("offense") || info.offense) &&
+            (!filters.includes("chc") || info.stats.includes("chc")) &&
+            (!filters.includes("owned") || (info.groupId !== undefined && equippedSetIds.includes(info.groupId))),
+        )
+    : [];
+  if (sortByDps) listed.sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0));
 
   const named = piece?.source === "named" ? findNamed(piece.id) : undefined;
   const brand =
@@ -210,12 +251,24 @@ export function GearEditor({
   return (
     <EditorSheet title={slot.label} icon={slot.icon} onClose={onClose}>
       <KindTabs tabs={SOURCE_TABS} active={piece?.source ?? null} onChange={setSource} />
+      {piece && (
+        <PickerToolbar
+          query={query}
+          onQuery={setQuery}
+          filters={FILTERS}
+          activeFilters={filters}
+          onToggleFilter={(id) => setFilters((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]))}
+          sortByDps={sortByDps}
+          onToggleSort={() => setSortByDps((v) => !v)}
+        />
+      )}
 
       {piece ? (
         <div className="flex min-h-0 flex-1">
           {/* 왼쪽: 브랜드·네임드·세트 한 줄 세로 슬라이드 */}
           <ul className="w-24 shrink-0 overflow-y-auto border-r bg-gray-50 p-1.5 sm:w-28">
-            {listFor(piece.source).map((item) => {
+            {listed.length === 0 && <li className="p-2 text-[10px] text-gray-400">결과 없음</li>}
+            {listed.map(({ item, delta }) => {
               const isActive = item.id === piece.id;
               return (
                 <li key={item.id}>
@@ -244,6 +297,7 @@ export function GearEditor({
                     >
                       {item.name}
                     </span>
+                    {!isActive && <DeltaText delta={delta} />}
                   </button>
                 </li>
               );
@@ -319,4 +373,56 @@ export function GearEditor({
       )}
     </EditorSheet>
   );
+}
+
+const FILTERS = [
+  { id: "offense", label: "공격형" },
+  { id: "chc", label: "치확 있음" },
+  { id: "owned", label: "세트 완성" },
+];
+
+const OFFENSE_STATS: StatKey[] = [
+  "wd", "chc", "chd", "hsd", "dta", "dth", "dtooc", "rof",
+  "arDmg", "smgDmg", "lmgDmg", "rifleDmg", "mmrDmg", "shotgunDmg", "pistolDmg",
+];
+
+/** 목록 필터·검색용 장비 정보: 효과 문구, 포함한 스탯, 공격형 여부, 소속 브랜드·세트 id */
+function itemInfo(source: GearPiece["source"], id: string): { text: string; stats: StatKey[]; offense: boolean; groupId?: string } {
+  let bonuses: Bonus[] = [];
+  let extraStats: StatKey[] = [];
+  let groupId: string | undefined;
+  let text = "";
+  if (source === "brand") {
+    const brand = BRANDS.find((b) => b.id === id);
+    bonuses = brand?.bonuses ?? [];
+    groupId = id;
+  } else if (source === "set") {
+    const set = GEAR_SETS.find((g) => g.id === id);
+    if (set) {
+      bonuses = [set.twoPiece, set.threePiece, set.fourPiece.bonus, set.chest.bonus, set.backpack.bonus];
+      extraStats = set.scaledStats?.(true, true).map((e) => e.stat) ?? [];
+      text = `${set.fourPiece.name} ${set.chest.name} ${set.backpack.name}`;
+      if (set.ampScaling) extraStats.push("wd");
+    }
+    groupId = id;
+  } else if (source === "named") {
+    const named = findNamed(id);
+    if (named) {
+      const brand = namedBrand(named);
+      bonuses = [named.bonus, ...(brand?.bonuses ?? [])];
+      groupId = brand?.id;
+      text = `${named.brand} ${named.effectName ?? ""} ${named.desc}`;
+    }
+  } else {
+    const exotic = findExoticGear(id);
+    if (exotic) {
+      bonuses = [exotic.bonus];
+      extraStats = exotic.attrs.filter((a): a is StatKey => !a.startsWith("text:") && a !== "any") as StatKey[];
+      text = `${exotic.talentName} ${exotic.desc}`;
+    }
+  }
+  const stats = [...bonuses.flatMap((b) => (b.stats ?? []).map((e) => e.stat)), ...extraStats];
+  const hasAmp = bonuses.some((b) => (b.amps?.length ?? 0) > 0);
+  text += " " + bonuses.map(describeStats).join(" ");
+  return { text, stats, offense: hasAmp || stats.some((st) => OFFENSE_STATS.includes(st)), groupId };
 }

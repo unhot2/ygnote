@@ -90,7 +90,8 @@ export function findExoticGear(id: string): ExoticGear | undefined {
 
 /**
  * 특급 보호장구 이미지. 나무위키 "톰 클랜시의 디비전 2/특급 장비" 문서에 올라온 이미지를 그대로 링크한다 (2026-10 확인).
- * 값은 https://i.namu.wiki/i/ 뒤의 파일 키(.webp 제외)이고, 이미지가 없는 장비는 부위 실루엣으로 대신한다.
+ * 값은 https://i.namu.wiki/i/ 뒤의 파일 키(.webp 제외)이고, "/"로 시작하면 public/의 로컬 이미지다.
+ * 이미지가 없는 장비는 부위 실루엣으로 대신한다.
  */
 export const EXOTIC_GEAR_IMAGES: Record<string, string> = {
   "coyotes-mask": "C8JGOp94DxCiIrW0fjki-fmhpFhKmJS2Cs8EWnpC_PUwqYaC2S_izThIzkFbQMsnR1HhKAOXBQ734dzrotK17Fq259RsQnUplGh7Tzarl9oss40p0jsOC2veXnXlnRr0egCvvIa_10P0Wru8RFgyaA",
@@ -115,9 +116,21 @@ export const EXOTIC_GEAR_IMAGES: Record<string, string> = {
   "imperial-dynasty": "mqNL93aPU41Vk_HyQfpniNSC8t7A__6qm3eY8NXdQuGp6UefDwID5v10oiZU7_407byC3ViCOZ5Y4ee4KxLF-JtekLwVVMk9mPYBgpENy_2PoF2ejqcIkAalvaLzWSg4oWivlJFqELnSlHps9iCx5A",
   "sawyers-kneepads": "TfcmMfd7p081VzPnJc5SRdIIUHdodrKhP3xp7TOknPMrUl-0jLhVxcsIhnK_6E0LJU6-17rn2lA9ZHIs_IRO-JN02eCBDgAUgGuXJcoerQC0HjVJU11lZrM4Z8EgF-j3ipI4KUwJbjNsf5B6GFZ2UQ",
   "ninjabike-kneepads": "yLB1PHS7fF5hhxH58yZ9yrlSZzCzTBJsSbbh0HwOsiJDvZPci66kul4LzT-zNEbx89btbtSrwVMbVT7YIlXcJxZ7qdBjWYZz0xd0d9SjSgD5Igso7iqL3w6Kfe4UZ-bw5eNCWgcYC86IXhKrRZlKZA",
+  // 나무위키에 없는 장비는 팬덤 위키·KeenGamer 홍보 이미지에서 장비 부분만 정사각형으로 잘라 public/에 뒀다
+  "investor": "/division/gear/investor.webp",
+  "ninjabike-backpack": "/division/gear/ninjabike-backpack.webp",
+  "bloody-knuckles": "/division/gear/bloody-knuckles.webp",
+  "rugged-gauntlet": "/division/gear/rugged-gauntlet.webp",
+  "waveform": "/division/gear/waveform.webp",
+  "shocker-punch": "/division/gear/shocker-punch.webp",
+  "centurions-scabbard": "/division/gear/centurions-scabbard.webp",
+  "nimble-holster": "/division/gear/nimble-holster.webp",
+  "blacklisters": "/division/gear/blacklisters.webp",
+  "nurses-kneepads": "/division/gear/nurses-kneepads.webp",
 };
 
 export function exoticGearImage(id: string): string | undefined {
   const key = EXOTIC_GEAR_IMAGES[id];
-  return key ? `https://i.namu.wiki/i/${key}.webp` : undefined;
+  if (!key) return undefined;
+  return key.startsWith("/") ? key : `https://i.namu.wiki/i/${key}.webp`;
 }

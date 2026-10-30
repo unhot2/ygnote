@@ -4,15 +4,21 @@ import {
   findWeapon,
   WEAPON_ATTRIBUTES,
   WEAPON_CLASSES,
-  WEAPON_ITEMS,
   WEAPON_MODS,
   WEAPON_TALENTS,
   WEAPON_TYPE_CORE,
   type WeaponClassId,
   type WeaponKind,
 } from "@/data/division-weapons";
-import { formatStat, weaponBuildFrom, type WeaponBuild } from "@/lib/division/build";
-import { describeStats, EditorSheet, KindTabs, NONE, StepList, type Step } from "./EditorParts";
+import { useState } from "react";
+import {
+  formatStat,
+  weaponBuildFrom,
+  weaponsForSlot,
+  type WeaponBuild,
+  type WeaponSlotId,
+} from "@/lib/division/build";
+import { DeltaText, describeStats, EditorSheet, KindTabs, NONE, PickerToolbar, StepList, type Step } from "./EditorParts";
 import { NumberField } from "./ui";
 import { WEAPON_KIND_BADGE, WeaponImage } from "./WeaponTile";
 
@@ -33,30 +39,54 @@ const TALENT_OPTIONS = WEAPON_TALENTS.map((t) => ({ value: t.id, label: t.name }
  * 왼쪽에 무기군별 무기 목록, 오른쪽에 속성·모드·특수효과 단계와 기본 수치를 둔다.
  */
 export function WeaponEditor({
+  slot,
   weapon,
   onChange,
   onClose,
+  previewDps,
+  otherExotic,
 }: {
+  slot: WeaponSlotId;
   weapon: WeaponBuild;
   onChange: (weapon: WeaponBuild) => void;
   onClose: () => void;
+  /** 이 칸에 그 무기를 끼우고 기준 무기로 삼았을 때의 지속 DPS */
+  previewDps: (weapon: WeaponBuild) => number;
+  /** 다른 칸에 낀 특급 무기 이름 (특급은 하나만 쓸 수 있다) */
+  otherExotic?: string;
 }) {
+  const [query, setQuery] = useState("");
+  const [sortByDps, setSortByDps] = useState(false);
+  // 편집 창을 열 때 다른 칸에 있던 특급 무기. 이 칸에 특급을 끼우면 그 무기가 빠지므로 처음 값을 기억해 안내한다
+  const [replacedExotic] = useState(otherExotic);
   const item = findWeapon(weapon.weaponId);
   const kind: WeaponKind = item?.kind ?? "normal";
   const update = (patch: Partial<WeaponBuild>) => onChange({ ...weapon, ...patch });
 
   // 무기를 바꿔도 고른 속성·모드·특수효과는 그대로 둔다 (해당 무기에서 쓰지 않으면 계산에서 빠진다)
-  const selectItem = (id: string) => {
-    const base = weaponBuildFrom(id);
-    onChange({ ...base, attr: weapon.attr, talent: weapon.talent, mods: weapon.mods });
-  };
+  const candidate = (id: string): WeaponBuild => ({ ...weaponBuildFrom(id), attr: weapon.attr, talent: weapon.talent, mods: weapon.mods });
+  const selectItem = (id: string) => onChange(candidate(id));
+  const slotWeapons = weaponsForSlot(slot);
   const setKind = (next: WeaponKind) => {
     if (next === kind) return;
-    selectItem(WEAPON_ITEMS.find((w) => w.kind === next)!.id);
+    const first = slotWeapons.find((w) => w.kind === next);
+    if (first) selectItem(first.id);
   };
 
-  const list = WEAPON_ITEMS.filter((w) => w.kind === kind);
-  const groups = CLASS_ORDER.map((cls) => ({ cls, items: list.filter((w) => w.cls === cls) })).filter((g) => g.items.length);
+  // 지금 무기 대비 각 후보의 지속 DPS 변화(%)
+  const baseDps = previewDps(weapon);
+  const deltaOf = (id: string) => (baseDps > 0 ? (previewDps(candidate(id)) / baseDps - 1) * 100 : null);
+
+  const q = query.trim().toLowerCase();
+  const list = slotWeapons.filter(
+    (w) =>
+      w.kind === kind &&
+      (!q || [w.name, w.en, w.base, w.fixedTalent?.name, w.fixedTalent?.desc].some((t) => t?.toLowerCase().includes(q))),
+  );
+  const deltas = new Map(list.map((w) => [w.id, deltaOf(w.id)]));
+  const groups = sortByDps
+    ? [{ cls: null, items: [...list].sort((a, b) => (deltas.get(b.id) ?? 0) - (deltas.get(a.id) ?? 0)) }]
+    : CLASS_ORDER.map((cls) => ({ cls, items: list.filter((w) => w.cls === cls) })).filter((g) => g.items.length);
   const weaponClass = WEAPON_CLASSES[weapon.cls];
   const classCore = item?.coreOverride ?? weaponClass.core;
 
@@ -125,14 +155,15 @@ export function WeaponEditor({
   return (
     <EditorSheet title="무기" icon="🔫" onClose={onClose}>
       <KindTabs tabs={KIND_TABS} active={kind} onChange={setKind} />
+      <PickerToolbar query={query} onQuery={setQuery} sortByDps={sortByDps} onToggleSort={() => setSortByDps((v) => !v)} />
 
       <div className="flex min-h-0 flex-1">
         {/* 왼쪽: 무기군별 무기 한 줄 세로 슬라이드 */}
         <ul className="w-24 shrink-0 overflow-y-auto border-r bg-gray-50 p-1.5 sm:w-28">
           {groups.map((group) => (
-            <li key={group.cls}>
+            <li key={group.cls ?? "dps"}>
               <p className="sticky top-0 z-[1] bg-gray-50 px-1 pb-1 pt-2 text-[10px] font-semibold text-gray-400">
-                {WEAPON_CLASSES[group.cls].label}
+                {group.cls ? WEAPON_CLASSES[group.cls].label : "DPS 오르는 순"}
               </p>
               <ul>
                 {group.items.map((w) => {
@@ -152,6 +183,7 @@ export function WeaponEditor({
                         <span className={`line-clamp-2 text-center text-[10px] font-medium leading-tight ${WEAPON_KIND_BADGE[w.kind].text}`}>
                           {w.name}
                         </span>
+                        {!isActive && <DeltaText delta={deltas.get(w.id) ?? null} />}
                       </button>
                     </li>
                   );
@@ -163,6 +195,14 @@ export function WeaponEditor({
 
         {/* 오른쪽: 선택한 무기 정보, 단계별 선택, 기본 수치 */}
         <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
+          {kind === "exotic" && (
+            <p className="rounded-xl bg-red-500/10 px-3 py-2 text-xs text-red-300">
+              {replacedExotic
+                ? `특급 무기는 1개만 쓸 수 있어요. ${replacedExotic}이(가) 기본 무기로 바뀌었어요.`
+                : "특급 무기는 1개만 쓸 수 있어요. 다른 칸에 특급을 끼우면 이 무기가 기본 무기로 바뀌어요."}
+            </p>
+          )}
+          {list.length === 0 && <p className="text-xs text-gray-400">검색 결과가 없어요.</p>}
           <div className="flex gap-3 rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600">
             <WeaponImage weaponId={weapon.weaponId} cls={weapon.cls} kind={kind} className="h-14 w-28 rounded-lg bg-[#0b111d]" />
             <div className="flex min-w-0 flex-col">

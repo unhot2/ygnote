@@ -103,7 +103,7 @@ export function GearSlotCard({
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex min-h-28 overflow-hidden rounded-lg border border-gray-200 bg-[#1a2438] text-left transition-colors hover:border-orange-400 ${
+      className={`relative flex min-h-28 overflow-hidden rounded-lg border ${piece ? "border-gray-200" : "border-dashed border-gray-300"} bg-[#1a2438] text-left transition-colors hover:border-orange-400 ${
         style ? `bg-linear-to-r ${style.tint} to-transparent` : "hover:bg-orange-50/40"
       }`}
     >
@@ -115,9 +115,9 @@ export function GearSlotCard({
             <span className="text-[10px] font-medium text-gray-400">{slot.label}</span>
             {exotic ? (
               // 특급 장비는 브랜드 로고 대신 장비 이미지(없으면 빨간 부위 실루엣)를 보여준다
-              <ExoticGearImage id={piece.id} slot={slot.id} className="h-14 w-14 sm:h-16 sm:w-16" />
+              <ExoticGearImage id={piece.id} slot={slot.id} className="h-16 w-16 sm:h-20 sm:w-20" />
             ) : (
-              <GearLogo source={piece.source} id={piece.id} name={gearPieceName(piece)} bare className="h-14 w-14 sm:h-16 sm:w-16" />
+              <GearLogo source={piece.source} id={piece.id} name={gearPieceName(piece)} bare className="h-16 w-16 sm:h-20 sm:w-20" />
             )}
           </span>
           {/* 오른쪽: 이름과 속성 글자 */}
@@ -154,7 +154,10 @@ export function GearSlotCard({
             className="pointer-events-none absolute right-2 top-1/2 h-16 w-16 -translate-y-1/2 text-gray-300"
           />
           <span className="text-[11px] font-medium text-gray-400">{slot.label}</span>
-          <span className="flex flex-1 items-center text-xs text-gray-400">+ 장비 선택</span>
+          <span className="flex flex-1 flex-col justify-center text-xs text-gray-400">
+            + 장비 선택
+            <span className="text-[10px] text-orange-600">DPS순 추천 보기</span>
+          </span>
         </span>
       )}
     </button>
